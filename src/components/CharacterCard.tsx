@@ -12,9 +12,20 @@ interface CharacterCardProps {
 }
 
 const CharacterCard = ({ character, romanization, meaning, className }: CharacterCardProps) => {
-  const playAudio = () => {
+  const playAudio = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    // Create and configure the utterance
     const utterance = new SpeechSynthesisUtterance(character);
     utterance.lang = 'th-TH'; // Set language to Thai
+    utterance.rate = 0.8; // Slightly slower rate for better clarity
+    utterance.volume = 1.0; // Maximum volume
+    
+    // Cancel any ongoing speech
+    window.speechSynthesis.cancel();
+    
+    // Play the new utterance
     window.speechSynthesis.speak(utterance);
   };
 
@@ -31,11 +42,8 @@ const CharacterCard = ({ character, romanization, meaning, className }: Characte
       <Button 
         variant="ghost" 
         size="icon"
-        className="absolute top-2 right-2 hover:bg-thai-primary/20"
-        onClick={(e) => {
-          e.stopPropagation();
-          playAudio();
-        }}
+        className="absolute top-2 right-2 hover:bg-thai-primary/20 z-10"
+        onClick={playAudio}
       >
         <Volume2 className="h-4 w-4" />
       </Button>
