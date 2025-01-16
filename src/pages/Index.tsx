@@ -2,8 +2,9 @@ import React, { useState } from "react";
 import CharacterCard from "@/components/CharacterCard";
 import CategorySelector from "@/components/CategorySelector";
 import { motion } from "framer-motion";
+import PracticeCard from "@/components/PracticeCard";
 
-const CATEGORIES = ["Consonants", "Vowels", "Tones"];
+const CATEGORIES = ["Consonants", "Vowels", "Tones", "Practice"];
 
 const THAI_CHARACTERS = {
   Consonants: [
@@ -27,6 +28,14 @@ const THAI_CHARACTERS = {
     { char: "้", romanization: "falling tone", meaning: "second tone mark" },
     { char: "๊", romanization: "high tone", meaning: "third tone mark" },
     { char: "๋", romanization: "rising tone", meaning: "fourth tone mark" },
+  ],
+  Practice: [
+    { word: "สวัสดี", phonetic: "sa-wat-dee", meaning: "hello" },
+    { word: "ขอบคุณ", phonetic: "khop-khun", meaning: "thank you" },
+    { word: "ใช่", phonetic: "chai", meaning: "yes" },
+    { word: "ไม่", phonetic: "mai", meaning: "no" },
+    { word: "กิน", phonetic: "gin", meaning: "to eat" },
+    { word: "น้ำ", phonetic: "nam", meaning: "water" },
   ],
 };
 
@@ -54,14 +63,25 @@ const Index = () => {
         />
 
         <div className="grid grid-cols-2 md:grid-cols-3 gap-4 animate-fade-in">
-          {THAI_CHARACTERS[selectedCategory as keyof typeof THAI_CHARACTERS].map((char) => (
-            <CharacterCard
-              key={char.char}
-              character={char.char}
-              romanization={char.romanization}
-              meaning={char.meaning}
-            />
-          ))}
+          {selectedCategory === "Practice" ? (
+            THAI_CHARACTERS.Practice.map((item) => (
+              <PracticeCard
+                key={item.word}
+                word={item.word}
+                phonetic={item.phonetic}
+                meaning={item.meaning}
+              />
+            ))
+          ) : (
+            THAI_CHARACTERS[selectedCategory as keyof typeof THAI_CHARACTERS].map((char) => (
+              <CharacterCard
+                key={char.char}
+                character={char.char}
+                romanization={char.romanization}
+                meaning={char.meaning}
+              />
+            ))
+          )}
         </div>
       </motion.div>
     </div>
