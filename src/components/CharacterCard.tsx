@@ -1,8 +1,9 @@
-import React from "react";
+import React, { useCallback } from "react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Volume2 } from "lucide-react";
+import { useToast } from "@/components/ui/use-toast";
 
 interface CharacterCardProps {
   character: string;
@@ -12,22 +13,43 @@ interface CharacterCardProps {
 }
 
 const CharacterCard = ({ character, romanization, meaning, className }: CharacterCardProps) => {
-  const playAudio = (e: React.MouseEvent) => {
+  const { toast } = useToast();
+
+  const playAudio = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     
+    if (!window.speechSynthesis) {
+      toast({
+        title: "Error",
+        description: "Text-to-speech is not supported in your browser",
+        variant: "destructive",
+      });
+      return;
+    }
+
     // Create and configure the utterance
     const utterance = new SpeechSynthesisUtterance(character);
     utterance.lang = 'th-TH'; // Set language to Thai
     utterance.rate = 0.8; // Slightly slower rate for better clarity
     utterance.volume = 1.0; // Maximum volume
-    
+
+    // Handle errors
+    utterance.onerror = (event) => {
+      toast({
+        title: "Error",
+        description: "Failed to play audio",
+        variant: "destructive",
+      });
+      console.error('SpeechSynthesis Error:', event);
+    };
+
     // Cancel any ongoing speech
     window.speechSynthesis.cancel();
     
     // Play the new utterance
     window.speechSynthesis.speak(utterance);
-  };
+  }, [character, toast]);
 
   return (
     <motion.div
