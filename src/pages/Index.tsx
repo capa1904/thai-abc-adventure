@@ -68,12 +68,46 @@ const THAI_CHARACTERS = {
     { char: "๋", romanization: "rising tone", meaning: "fourth tone mark" },
   ],
   Practice: [
+    // Basic Greetings
     { word: "สวัสดี", phonetic: "sa-wat-dee", meaning: "hello" },
     { word: "ขอบคุณ", phonetic: "khop-khun", meaning: "thank you" },
+    { word: "ลาก่อน", phonetic: "laa-gorn", meaning: "goodbye" },
+    
+    // Basic Responses
     { word: "ใช่", phonetic: "chai", meaning: "yes" },
     { word: "ไม่", phonetic: "mai", meaning: "no" },
+    { word: "ได้", phonetic: "dai", meaning: "can/okay" },
+    
+    // Essential Verbs
     { word: "กิน", phonetic: "gin", meaning: "to eat" },
+    { word: "ดื่ม", phonetic: "duem", meaning: "to drink" },
+    { word: "นอน", phonetic: "non", meaning: "to sleep" },
+    { word: "ไป", phonetic: "bpai", meaning: "to go" },
+    { word: "มา", phonetic: "maa", meaning: "to come" },
+    
+    // Common Nouns
     { word: "น้ำ", phonetic: "nam", meaning: "water" },
+    { word: "ข้าว", phonetic: "khao", meaning: "rice" },
+    { word: "รถ", phonetic: "rot", meaning: "car" },
+    { word: "บ้าน", phonetic: "baan", meaning: "house" },
+    { word: "หมา", phonetic: "maa", meaning: "dog" },
+    
+    // Basic Questions
+    { word: "อะไร", phonetic: "a-rai", meaning: "what" },
+    { word: "ที่ไหน", phonetic: "tee-nai", meaning: "where" },
+    { word: "เมื่อไร", phonetic: "meuua-rai", meaning: "when" },
+    
+    // Numbers
+    { word: "หนึ่ง", phonetic: "neung", meaning: "one" },
+    { word: "สอง", phonetic: "song", meaning: "two" },
+    { word: "สาม", phonetic: "saam", meaning: "three" },
+    
+    // Common Adjectives
+    { word: "ดี", phonetic: "dee", meaning: "good" },
+    { word: "ร้อน", phonetic: "ron", meaning: "hot" },
+    { word: "เย็น", phonetic: "yen", meaning: "cold" },
+    { word: "ใหญ่", phonetic: "yai", meaning: "big" },
+    { word: "เล็ก", phonetic: "lek", meaning: "small" },
   ],
 };
 
@@ -85,7 +119,7 @@ const Index = () => {
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="max-w-4xl mx-auto"
+        className="max-w-6xl mx-auto" // Increased max-width for better layout
       >
         <h1 className="text-4xl md:text-5xl font-bold text-thai-dark text-center mb-4">
           Learn Thai Alphabet
@@ -100,16 +134,22 @@ const Index = () => {
           onSelectCategory={setSelectedCategory}
         />
 
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 animate-fade-in">
+        <div className={`grid gap-4 animate-fade-in ${
+          selectedCategory === "Practice" 
+            ? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3" 
+            : "grid-cols-2 md:grid-cols-3"
+        }`}>
           {selectedCategory === "Practice" ? (
-            THAI_CHARACTERS.Practice.map((item) => (
-              <PracticeCard
-                key={item.word}
-                word={item.word}
-                phonetic={item.phonetic}
-                meaning={item.meaning}
-              />
-            ))
+            <>
+              {THAI_CHARACTERS.Practice.map((item) => (
+                <PracticeCard
+                  key={item.word}
+                  word={item.word}
+                  phonetic={item.phonetic}
+                  meaning={item.meaning}
+                />
+              ))}
+            </>
           ) : (
             THAI_CHARACTERS[selectedCategory as keyof typeof THAI_CHARACTERS].map((char) => (
               <CharacterCard
