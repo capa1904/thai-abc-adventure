@@ -119,17 +119,80 @@ const Index = () => {
   const [isSingleCardMode, setIsSingleCardMode] = useState(false);
   const [currentCardIndex, setCurrentCardIndex] = useState(0);
 
-  const practiceWords = THAI_CHARACTERS.Practice;
+  const getCurrentCategoryData = () => {
+    return THAI_CHARACTERS[selectedCategory as keyof typeof THAI_CHARACTERS];
+  };
 
   const handlePrevCard = () => {
+    const categoryData = getCurrentCategoryData();
     setCurrentCardIndex((prev) => 
-      prev === 0 ? practiceWords.length - 1 : prev - 1
+      prev === 0 ? categoryData.length - 1 : prev - 1
     );
   };
 
   const handleNextCard = () => {
+    const categoryData = getCurrentCategoryData();
     setCurrentCardIndex((prev) => 
-      prev === practiceWords.length - 1 ? 0 : prev + 1
+      prev === categoryData.length - 1 ? 0 : prev + 1
+    );
+  };
+
+  const renderCard = (item: any, index: number) => {
+    if (selectedCategory === "Practice") {
+      return (
+        <PracticeCard
+          key={item.word}
+          word={item.word}
+          phonetic={item.phonetic}
+          meaning={item.meaning}
+        />
+      );
+    }
+    return (
+      <CharacterCard
+        key={item.char}
+        character={item.char}
+        romanization={item.romanization}
+        meaning={item.meaning}
+      />
+    );
+  };
+
+  const renderSingleCard = () => {
+    const categoryData = getCurrentCategoryData();
+    const currentItem = categoryData[currentCardIndex];
+
+    return (
+      <div className="flex flex-col items-center">
+        <motion.div
+          key={currentCardIndex}
+          initial={{ opacity: 0, x: 50 }}
+          animate={{ opacity: 1, x: 0 }}
+          exit={{ opacity: 0, x: -50 }}
+          className="w-full max-w-lg mx-auto"
+        >
+          {renderCard(currentItem, currentCardIndex)}
+        </motion.div>
+        <div className="flex gap-4 mt-6">
+          <Button
+            variant="outline"
+            onClick={handlePrevCard}
+            className="flex items-center gap-2"
+          >
+            <ChevronLeft className="h-4 w-4" /> Previous
+          </Button>
+          <Button
+            variant="outline"
+            onClick={handleNextCard}
+            className="flex items-center gap-2"
+          >
+            Next <ChevronRight className="h-4 w-4" />
+          </Button>
+        </div>
+        <p className="text-sm text-gray-500 mt-2">
+          Card {currentCardIndex + 1} of {getCurrentCategoryData().length}
+        </p>
+      </div>
     );
   };
 
@@ -153,81 +216,30 @@ const Index = () => {
           onSelectCategory={setSelectedCategory}
         />
 
-        {selectedCategory === "Practice" && (
-          <div className="flex justify-center mb-4">
-            <ToggleGroup type="single" value={isSingleCardMode ? "single" : "grid"} onValueChange={(value) => setIsSingleCardMode(value === "single")}>
-              <ToggleGroupItem value="grid" aria-label="Grid View">
-                <Grid2X2 className="h-4 w-4" />
-              </ToggleGroupItem>
-              <ToggleGroupItem value="single" aria-label="Single Card View">
-                <Focus className="h-4 w-4" />
-              </ToggleGroupItem>
-            </ToggleGroup>
-          </div>
-        )}
+        <div className="flex justify-center mb-4">
+          <ToggleGroup 
+            type="single" 
+            value={isSingleCardMode ? "single" : "grid"} 
+            onValueChange={(value) => setIsSingleCardMode(value === "single")}
+          >
+            <ToggleGroupItem value="grid" aria-label="Grid View">
+              <Grid2X2 className="h-4 w-4" />
+            </ToggleGroupItem>
+            <ToggleGroupItem value="single" aria-label="Single Card View">
+              <Focus className="h-4 w-4" />
+            </ToggleGroupItem>
+          </ToggleGroup>
+        </div>
 
-        {selectedCategory === "Practice" && isSingleCardMode ? (
-          <div className="flex flex-col items-center">
-            <motion.div
-              key={currentCardIndex}
-              initial={{ opacity: 0, x: 50 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -50 }}
-              className="w-full max-w-lg mx-auto"
-            >
-              <PracticeCard
-                word={practiceWords[currentCardIndex].word}
-                phonetic={practiceWords[currentCardIndex].phonetic}
-                meaning={practiceWords[currentCardIndex].meaning}
-              />
-            </motion.div>
-            <div className="flex gap-4 mt-6">
-              <Button
-                variant="outline"
-                onClick={handlePrevCard}
-                className="flex items-center gap-2"
-              >
-                <ChevronLeft className="h-4 w-4" /> Previous
-              </Button>
-              <Button
-                variant="outline"
-                onClick={handleNextCard}
-                className="flex items-center gap-2"
-              >
-                Next <ChevronRight className="h-4 w-4" />
-              </Button>
-            </div>
-            <p className="text-sm text-gray-500 mt-2">
-              Card {currentCardIndex + 1} of {practiceWords.length}
-            </p>
-          </div>
+        {isSingleCardMode ? (
+          renderSingleCard()
         ) : (
           <div className={`grid gap-4 animate-fade-in ${
             selectedCategory === "Practice" 
               ? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3" 
               : "grid-cols-2 md:grid-cols-3"
           }`}>
-            {selectedCategory === "Practice" ? (
-              <>
-                {THAI_CHARACTERS.Practice.map((item) => (
-                  <PracticeCard
-                    key={item.word}
-                    word={item.word}
-                    phonetic={item.phonetic}
-                    meaning={item.meaning}
-                  />
-                ))}
-              </>
-            ) : (
-              THAI_CHARACTERS[selectedCategory as keyof typeof THAI_CHARACTERS].map((char) => (
-                <CharacterCard
-                  key={char.char}
-                  character={char.char}
-                  romanization={char.romanization}
-                  meaning={char.meaning}
-                />
-              ))
-            )}
+            {getCurrentCategoryData().map((item, index) => renderCard(item, index))}
           </div>
         )}
       </motion.div>
