@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import CharacterCard from "@/components/CharacterCard";
 import CategorySelector from "@/components/CategorySelector";
 import { motion } from "framer-motion";
@@ -119,8 +119,13 @@ const Index = () => {
   const [isSingleCardMode, setIsSingleCardMode] = useState(false);
   const [currentCardIndex, setCurrentCardIndex] = useState(0);
 
+  // Reset currentCardIndex when category changes
+  useEffect(() => {
+    setCurrentCardIndex(0);
+  }, [selectedCategory]);
+
   const getCurrentCategoryData = () => {
-    return THAI_CHARACTERS[selectedCategory as keyof typeof THAI_CHARACTERS];
+    return THAI_CHARACTERS[selectedCategory as keyof typeof THAI_CHARACTERS] || [];
   };
 
   const handlePrevCard = () => {
@@ -138,6 +143,8 @@ const Index = () => {
   };
 
   const renderCard = (item: any, index: number) => {
+    if (!item) return null;
+
     if (selectedCategory === "Practice") {
       return (
         <PracticeCard
@@ -161,6 +168,8 @@ const Index = () => {
   const renderSingleCard = () => {
     const categoryData = getCurrentCategoryData();
     const currentItem = categoryData[currentCardIndex];
+
+    if (!currentItem) return null;
 
     return (
       <div className="flex flex-col items-center">
