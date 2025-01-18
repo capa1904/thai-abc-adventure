@@ -15,12 +15,11 @@ import { Toggle } from "@/components/ui/toggle";
 import { cn } from "@/lib/utils";
 import AboutDialog from "@/components/AboutDialog";
 
-// Helper-Guard
 function isThaiWord(item: ThaiItem): item is ThaiWord {
   return "word" in item;
 }
 
-const Index = () => {
+const Index: React.FC = () => {
   // ----------------------------------------------------------------------------
   // STATES
   // ----------------------------------------------------------------------------
@@ -32,11 +31,12 @@ const Index = () => {
   const [currentCardIndex, setCurrentCardIndex] = useState<number>(0);
   const [hideRomanization, setHideRomanization] = useState<boolean>(false);
 
+  // „Welcher Buchstabe“ war selektiert, um in Practice zu wechseln
   const [selectedCharacter, setSelectedCharacter] = useState<string | null>(
     null
   );
 
-  // Voriger Zustand (für „Back from Practice“)
+  // Voriger Zustand (um via „Back“ aus Practice zurückzukehren)
   const [previousCategory, setPreviousCategory] = useState<string | null>(null);
   const [previousCharacter, setPreviousCharacter] = useState<string | null>(
     null
@@ -45,10 +45,10 @@ const Index = () => {
     null
   );
 
-  // Ob wir explizit aus „Practice“ zurückkehren
+  // Flag, ob wir explizit aus „Practice“ zurückkehren
   const [isReturningFromPractice, setIsReturningFromPractice] = useState(false);
 
-  // Letzte bekannte Kategorie, um echten Wechsel von „Back“ zu unterscheiden
+  // Letzte bekannte Kategorie, um echten Wechsel vs. Back-from-Practice zu unterscheiden
   const [lastCategory, setLastCategory] = useState<string>(CATEGORIES[0]);
 
   // ----------------------------------------------------------------------------
@@ -72,18 +72,45 @@ const Index = () => {
   }, [selectedCategory, lastCategory, isReturningFromPractice]);
 
   // ----------------------------------------------------------------------------
-  // useEffect: Zurück aus Practice
+  // useEffect: Zurück aus Practice => Modus wiederherstellen
   // ----------------------------------------------------------------------------
   useEffect(() => {
     if (isReturningFromPractice && previousCategory) {
-      // z.B. SingleCardMode wiederherstellen
+      // Single-/Grid-Mode wiederherstellen
       if (previousViewMode !== null) {
         setIsSingleCardMode(previousViewMode);
       }
       setIsReturningFromPractice(false);
-      setPreviousCharacter(null);
+
+      // WICHTIG: Hier „löschen“ wir den prevCharacter NICHT sofort,
+      // da wir ggf. gleich scrollen wollen. Machen wir im nächsten Effekt
+      // oder direkt nach dem Scroll.
     }
   }, [isReturningFromPractice, previousCategory, previousViewMode]);
+
+  // ----------------------------------------------------------------------------
+  // useEffect: Scrollen zum ursprünglichen Buchstaben, wenn wir
+  //            soeben aus Practice zurückkamen und in "Consonants" sind
+  // ----------------------------------------------------------------------------
+  useEffect(() => {
+    // Falls wir eben aus Practice zurückkamen ODER soeben "Consonants" aktivierten:
+    // und wir haben noch ein "previousCharacter"
+    if (
+      selectedCategory === "Consonants" &&
+      previousCharacter &&
+      !isReturningFromPractice
+    ) {
+      // Kleines Delay, damit das Grid gerendert ist
+      setTimeout(() => {
+        const el = document.querySelector(`[data-char="${previousCharacter}"]`);
+        if (el) {
+          el.scrollIntoView({ behavior: "smooth", block: "center" });
+        }
+        // Danach optional:
+        setPreviousCharacter(null);
+      }, 100);
+    }
+  }, [selectedCategory, previousCharacter, isReturningFromPractice]);
 
   // ----------------------------------------------------------------------------
   // getCurrentCategoryData
@@ -91,11 +118,11 @@ const Index = () => {
   const getCurrentCategoryData = React.useCallback((): ThaiItem[] => {
     if (selectedCategory === "Practice") {
       const practiceItems = THAI_CHARACTERS.Practice as ThaiWord[];
-      // Falls kein bestimmtes Zeichen => alle
       if (!selectedCharacter) {
+        // Keine Filter => alles
         return practiceItems;
       }
-      // Sonst filtern
+      // Sonst: filter nach selectedCharacter
       const normChar = selectedCharacter
         .normalize("NFD")
         .replace(/[\u0300-\u036f]/g, "");
@@ -143,20 +170,21 @@ const Index = () => {
   );
 
   // ----------------------------------------------------------------------------
-  // Navigation
+  // Navigation (Single-Card)
   // ----------------------------------------------------------------------------
   const handleNavigation = (direction: "prev" | "next") => {
     const items = getCurrentCategoryData();
-    setCurrentCardIndex((old) => {
+    setCurrentCardIndex((oldIndex) => {
       if (direction === "prev") {
-        return old === 0 ? items.length - 1 : old - 1;
+        return oldIndex === 0 ? items.length - 1 : oldIndex - 1;
       }
-      return old === items.length - 1 ? 0 : old + 1;
+      // next
+      return oldIndex === items.length - 1 ? 0 : oldIndex + 1;
     });
   };
 
   // ----------------------------------------------------------------------------
-  // Grid -> SingleCard
+  // Fokus aus Grid => SingleCard
   // ----------------------------------------------------------------------------
   const handleFocusCard = (index: number) => {
     setCurrentCardIndex(index);
@@ -167,10 +195,12 @@ const Index = () => {
   // Select for Practice
   // ----------------------------------------------------------------------------
   const handleSelectForPractice = (char: string) => {
+    // Vorherige Category & Mode & Char merken:
     setPreviousCategory(selectedCategory);
     setPreviousViewMode(isSingleCardMode);
     setPreviousCharacter(char);
 
+    // Dann: nach Practice
     setSelectedCharacter(char);
     setSelectedCategory("Practice");
     setCurrentCardIndex(0);
@@ -185,6 +215,7 @@ const Index = () => {
       setSelectedCategory(previousCategory);
       setSelectedCharacter(null);
     } else {
+      // Nur Single->Grid
       setIsSingleCardMode(false);
     }
   };
@@ -282,7 +313,6 @@ const Index = () => {
             ))}
           </div>
 
-          {/* Consonant Classes */}
           {selectedCategory === "Consonants" && (
             <div className="flex gap-1 overflow-x-auto pb-2 hide-scrollbar">
               <Button
