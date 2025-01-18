@@ -12,6 +12,7 @@ interface CharacterCardProps {
   letterName?: string;
   class?: string;
   className?: string;
+  hideRomanization?: boolean;
 }
 
 const CharacterCard = ({ 
@@ -20,7 +21,8 @@ const CharacterCard = ({
   meaning, 
   letterName, 
   class: characterClass, 
-  className 
+  className,
+  hideRomanization = false
 }: CharacterCardProps) => {
   const { toast } = useToast();
 
@@ -55,6 +57,19 @@ const CharacterCard = ({
     window.speechSynthesis.speak(utterance);
   }, [letterName, character, toast]);
 
+  const getClassSymbol = (classType?: string) => {
+    switch(classType) {
+      case "Middle Class":
+        return "◆";
+      case "High Class":
+        return "▲";
+      case "Low Class":
+        return "●";
+      default:
+        return "";
+    }
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -66,9 +81,12 @@ const CharacterCard = ({
       )}
     >
       {characterClass && (
-        <span className="absolute top-2 left-2 text-xs text-gray-400">
-          {characterClass}
-        </span>
+        <div className="absolute top-2 left-2 flex items-center gap-1">
+          <span className="text-xs text-gray-400">{characterClass}</span>
+          <span className="text-sm text-thai-secondary" title={characterClass}>
+            {getClassSymbol(characterClass)}
+          </span>
+        </div>
       )}
       <Button 
         variant="ghost" 
@@ -79,7 +97,9 @@ const CharacterCard = ({
         <Volume2 className="h-4 w-4" />
       </Button>
       <span className="text-6xl font-bold text-thai-dark">{character}</span>
-      <span className="text-xl text-thai-secondary font-medium">{romanization}</span>
+      {!hideRomanization && (
+        <span className="text-xl text-thai-secondary font-medium">{romanization}</span>
+      )}
       {meaning && <span className="text-sm text-gray-600">{meaning}</span>}
       {letterName && <span className="text-sm text-thai-secondary">{letterName}</span>}
     </motion.div>
