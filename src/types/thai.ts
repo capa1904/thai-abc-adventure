@@ -2,6 +2,7 @@ export interface ThaiCharacter {
   char: string;
   romanization: string;
   meaning?: string;
+  letterName?: string;
 }
 
 export interface ThaiWord {

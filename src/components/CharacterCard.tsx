@@ -9,10 +9,11 @@ interface CharacterCardProps {
   character: string;
   romanization: string;
   meaning?: string;
+  letterName?: string;
   className?: string;
 }
 
-const CharacterCard = ({ character, romanization, meaning, className }: CharacterCardProps) => {
+const CharacterCard = ({ character, romanization, meaning, letterName, className }: CharacterCardProps) => {
   const { toast } = useToast();
 
   const playAudio = useCallback((e: React.MouseEvent) => {
@@ -29,7 +30,7 @@ const CharacterCard = ({ character, romanization, meaning, className }: Characte
     }
 
     // Create and configure the utterance
-    const utterance = new SpeechSynthesisUtterance(character);
+    const utterance = new SpeechSynthesisUtterance(letterName || character);
     utterance.lang = 'th-TH'; // Set language to Thai
     utterance.rate = 0.8; // Slightly slower rate for better clarity
     utterance.volume = 1.0; // Maximum volume
@@ -49,7 +50,7 @@ const CharacterCard = ({ character, romanization, meaning, className }: Characte
     
     // Play the new utterance
     window.speechSynthesis.speak(utterance);
-  }, [character, toast]);
+  }, [letterName, character, toast]);
 
   return (
     <motion.div
@@ -72,6 +73,7 @@ const CharacterCard = ({ character, romanization, meaning, className }: Characte
       <span className="text-6xl font-bold text-thai-dark">{character}</span>
       <span className="text-xl text-thai-secondary font-medium">{romanization}</span>
       {meaning && <span className="text-sm text-gray-600">{meaning}</span>}
+      {letterName && <span className="text-sm text-thai-secondary">{letterName}</span>}
     </motion.div>
   );
 };
