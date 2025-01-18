@@ -1,19 +1,21 @@
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
-import { Grid2X2, Focus } from "lucide-react";
+import { Grid2X2, Focus, Eye, EyeOff } from "lucide-react";
 import CategorySelector from "@/components/CategorySelector";
 import GridView from "@/components/GridView";
 import SingleCardView from "@/components/SingleCardView";
 import { CATEGORIES, THAI_CHARACTERS, THAI_CONSONANTS } from "@/data/thaiCharacters";
 import { ThaiItem } from "@/types/thai";
 import { Button } from "@/components/ui/button";
+import { Toggle } from "@/components/ui/toggle";
 
 const Index = () => {
   const [selectedCategory, setSelectedCategory] = useState(CATEGORIES[0]);
   const [selectedClass, setSelectedClass] = useState<string | null>(null);
   const [isSingleCardMode, setIsSingleCardMode] = useState(false);
   const [currentCardIndex, setCurrentCardIndex] = useState(0);
+  const [hideRomanization, setHideRomanization] = useState(false);
 
   useEffect(() => {
     setCurrentCardIndex(0);
@@ -87,7 +89,7 @@ const Index = () => {
           </div>
         )}
 
-        <div className="flex justify-center mb-4">
+        <div className="flex justify-center gap-4 mb-4">
           <ToggleGroup
             type="single"
             value={isSingleCardMode ? "single" : "grid"}
@@ -100,6 +102,22 @@ const Index = () => {
               <Focus className="h-4 w-4" />
             </ToggleGroupItem>
           </ToggleGroup>
+
+          {selectedCategory === "Consonants" && (
+            <Toggle
+              aria-label="Toggle romanization"
+              pressed={hideRomanization}
+              onPressedChange={setHideRomanization}
+              className="data-[state=on]:bg-thai-secondary"
+            >
+              {hideRomanization ? (
+                <EyeOff className="h-4 w-4 mr-2" />
+              ) : (
+                <Eye className="h-4 w-4 mr-2" />
+              )}
+              {hideRomanization ? "Show Romanization" : "Hide Romanization"}
+            </Toggle>
+          )}
         </div>
 
         {isSingleCardMode ? (
@@ -108,11 +126,13 @@ const Index = () => {
             selectedCategory={selectedCategory}
             currentIndex={currentCardIndex}
             onNavigate={handleNavigation}
+            hideRomanization={hideRomanization}
           />
         ) : (
           <GridView
             items={getCurrentCategoryData()}
             selectedCategory={selectedCategory}
+            hideRomanization={hideRomanization}
           />
         )}
       </motion.div>

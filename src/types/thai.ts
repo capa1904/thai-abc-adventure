@@ -19,4 +19,5 @@ export interface ViewProps {
   selectedCategory: string;
   currentIndex?: number;
   onNavigate?: (direction: 'prev' | 'next') => void;
+  hideRomanization?: boolean;
 }

@@ -1,19 +1,18 @@
-import React, { useState } from "react";
+import React from "react";
 import { ViewProps } from "@/types/thai";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight, Eye, EyeOff } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import CharacterCard from "./CharacterCard";
 import PracticeCard from "./PracticeCard";
-import { Toggle } from "@/components/ui/toggle";
 
 const SingleCardView: React.FC<ViewProps> = ({
   items,
   selectedCategory,
   currentIndex = 0,
   onNavigate,
+  hideRomanization,
 }) => {
-  const [hideRomanization, setHideRomanization] = useState(false);
   const currentItem = items[currentIndex];
 
   if (!currentItem) return null;
@@ -42,23 +41,6 @@ const SingleCardView: React.FC<ViewProps> = ({
 
   return (
     <div className="flex flex-col items-center">
-      {selectedCategory === "Consonants" && (
-        <div className="mb-4">
-          <Toggle
-            aria-label="Toggle romanization"
-            pressed={hideRomanization}
-            onPressedChange={setHideRomanization}
-            className="data-[state=on]:bg-thai-secondary"
-          >
-            {hideRomanization ? (
-              <EyeOff className="h-4 w-4 mr-2" />
-            ) : (
-              <Eye className="h-4 w-4 mr-2" />
-            )}
-            {hideRomanization ? "Show Romanization" : "Hide Romanization"}
-          </Toggle>
-        </div>
-      )}
       <motion.div
         key={currentIndex}
         initial={{ opacity: 0, x: 50 }}
