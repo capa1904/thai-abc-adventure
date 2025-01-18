@@ -15,6 +15,7 @@ import { Toggle } from "@/components/ui/toggle";
 import { cn } from "@/lib/utils";
 import AboutDialog from "@/components/AboutDialog";
 
+// Helper to check if an item is a word or a character
 function isThaiWord(item: ThaiItem): item is ThaiWord {
   return "word" in item;
 }
@@ -31,12 +32,12 @@ const Index: React.FC = () => {
   const [currentCardIndex, setCurrentCardIndex] = useState<number>(0);
   const [hideRomanization, setHideRomanization] = useState<boolean>(false);
 
-  // „Welcher Buchstabe“ war selektiert, um in Practice zu wechseln
+  // The character that triggered going to Practice:
   const [selectedCharacter, setSelectedCharacter] = useState<string | null>(
     null
   );
 
-  // Voriger Zustand (um via „Back“ aus Practice zurückzukehren)
+  // Store previous category info so we can go back from Practice
   const [previousCategory, setPreviousCategory] = useState<string | null>(null);
   const [previousCharacter, setPreviousCharacter] = useState<string | null>(
     null
@@ -44,15 +45,18 @@ const Index: React.FC = () => {
   const [previousViewMode, setPreviousViewMode] = useState<boolean | null>(
     null
   );
+  const [previousCardIndex, setPreviousCardIndex] = useState<number | null>(
+    null
+  );
 
-  // Flag, ob wir explizit aus „Practice“ zurückkehren
+  // If we are explicitly returning from Practice
   const [isReturningFromPractice, setIsReturningFromPractice] = useState(false);
 
-  // Letzte bekannte Kategorie, um echten Wechsel vs. Back-from-Practice zu unterscheiden
+  // Track the last category to differentiate a real user change from a "Practice" return
   const [lastCategory, setLastCategory] = useState<string>(CATEGORIES[0]);
 
   // ----------------------------------------------------------------------------
-  // useEffect: Echter Kategorie-Wechsel
+  // 1) useEffect: Real Category Change
   // ----------------------------------------------------------------------------
   useEffect(() => {
     const categoryHasChanged = selectedCategory !== lastCategory;
@@ -61,8 +65,9 @@ const Index: React.FC = () => {
       selectedCategory !== "Practice" &&
       !isReturningFromPractice;
 
+    // If user truly picked a new category
     if (isRealUserChange) {
-      // Reset
+      // Reset index, class, character
       setCurrentCardIndex(0);
       setSelectedClass(null);
       setSelectedCharacter(null);
@@ -72,45 +77,32 @@ const Index: React.FC = () => {
   }, [selectedCategory, lastCategory, isReturningFromPractice]);
 
   // ----------------------------------------------------------------------------
-  // useEffect: Zurück aus Practice => Modus wiederherstellen
+  // 2) useEffect: Return from Practice => restore single-card index
   // ----------------------------------------------------------------------------
   useEffect(() => {
     if (isReturningFromPractice && previousCategory) {
-      // Single-/Grid-Mode wiederherstellen
+      // Restore Single/Grid mode
       if (previousViewMode !== null) {
         setIsSingleCardMode(previousViewMode);
       }
-      setIsReturningFromPractice(false);
 
-      // WICHTIG: Hier „löschen“ wir den prevCharacter NICHT sofort,
-      // da wir ggf. gleich scrollen wollen. Machen wir im nächsten Effekt
-      // oder direkt nach dem Scroll.
-    }
-  }, [isReturningFromPractice, previousCategory, previousViewMode]);
-
-  // ----------------------------------------------------------------------------
-  // useEffect: Scrollen zum ursprünglichen Buchstaben, wenn wir
-  //            soeben aus Practice zurückkamen und in "Consonants" sind
-  // ----------------------------------------------------------------------------
-  useEffect(() => {
-    // Falls wir eben aus Practice zurückkamen ODER soeben "Consonants" aktivierten:
-    // und wir haben noch ein "previousCharacter"
-    if (
-      selectedCategory === "Consonants" &&
-      previousCharacter &&
-      !isReturningFromPractice
-    ) {
-      // Kleines Delay, damit das Grid gerendert ist
+      // Then do a small timeout so the array can build, and we can set the correct card index
       setTimeout(() => {
-        const el = document.querySelector(`[data-char="${previousCharacter}"]`);
-        if (el) {
-          el.scrollIntoView({ behavior: "smooth", block: "center" });
+        if (previousCardIndex !== null) {
+          setCurrentCardIndex(previousCardIndex);
         }
-        // Danach optional:
+        setIsReturningFromPractice(false);
+        // Clear out so we don't keep reusing them
         setPreviousCharacter(null);
-      }, 100);
+        setPreviousCardIndex(null);
+      }, 120);
     }
-  }, [selectedCategory, previousCharacter, isReturningFromPractice]);
+  }, [
+    isReturningFromPractice,
+    previousCategory,
+    previousViewMode,
+    previousCardIndex,
+  ]);
 
   // ----------------------------------------------------------------------------
   // getCurrentCategoryData
@@ -118,11 +110,11 @@ const Index: React.FC = () => {
   const getCurrentCategoryData = React.useCallback((): ThaiItem[] => {
     if (selectedCategory === "Practice") {
       const practiceItems = THAI_CHARACTERS.Practice as ThaiWord[];
+      // If no specific char -> show all
       if (!selectedCharacter) {
-        // Keine Filter => alles
         return practiceItems;
       }
-      // Sonst: filter nach selectedCharacter
+      // else filter for the selectedCharacter
       const normChar = selectedCharacter
         .normalize("NFD")
         .replace(/[\u0300-\u036f]/g, "");
@@ -145,7 +137,7 @@ const Index: React.FC = () => {
           class: selectedClass as "Middle Class" | "High Class" | "Low Class",
         }));
       } else {
-        // Alle Klassen
+        // All classes combined
         return Object.entries(THAI_CONSONANTS).flatMap(([cls, chars]) =>
           chars.map((c) => ({
             ...c,
@@ -161,6 +153,7 @@ const Index: React.FC = () => {
     if (selectedCategory === "Tones") {
       return THAI_CHARACTERS.Tones as ThaiCharacter[];
     }
+
     return [];
   }, [selectedCategory, selectedCharacter, selectedClass]);
 
@@ -170,21 +163,20 @@ const Index: React.FC = () => {
   );
 
   // ----------------------------------------------------------------------------
-  // Navigation (Single-Card)
+  // handleNavigation (Single-Card)
   // ----------------------------------------------------------------------------
   const handleNavigation = (direction: "prev" | "next") => {
     const items = getCurrentCategoryData();
-    setCurrentCardIndex((oldIndex) => {
+    setCurrentCardIndex((old) => {
       if (direction === "prev") {
-        return oldIndex === 0 ? items.length - 1 : oldIndex - 1;
+        return old === 0 ? items.length - 1 : old - 1;
       }
-      // next
-      return oldIndex === items.length - 1 ? 0 : oldIndex + 1;
+      return old === items.length - 1 ? 0 : old + 1;
     });
   };
 
   // ----------------------------------------------------------------------------
-  // Fokus aus Grid => SingleCard
+  // handleFocusCard -> Switch from Grid to Single-Card
   // ----------------------------------------------------------------------------
   const handleFocusCard = (index: number) => {
     setCurrentCardIndex(index);
@@ -192,36 +184,38 @@ const Index: React.FC = () => {
   };
 
   // ----------------------------------------------------------------------------
-  // Select for Practice
+  // handleSelectForPractice
   // ----------------------------------------------------------------------------
   const handleSelectForPractice = (char: string) => {
-    // Vorherige Category & Mode & Char merken:
+    // Save the previous state
     setPreviousCategory(selectedCategory);
     setPreviousViewMode(isSingleCardMode);
     setPreviousCharacter(char);
+    setPreviousCardIndex(currentCardIndex);
 
-    // Dann: nach Practice
+    // Switch to Practice
     setSelectedCharacter(char);
     setSelectedCategory("Practice");
     setCurrentCardIndex(0);
   };
 
   // ----------------------------------------------------------------------------
-  // Back-Button
+  // handleBackClick
   // ----------------------------------------------------------------------------
   const handleBackClick = () => {
+    // If in Practice => go back
     if (selectedCategory === "Practice" && previousCategory) {
       setIsReturningFromPractice(true);
       setSelectedCategory(previousCategory);
       setSelectedCharacter(null);
     } else {
-      // Nur Single->Grid
+      // SingleCard -> Grid
       setIsSingleCardMode(false);
     }
   };
 
   // ----------------------------------------------------------------------------
-  // Render
+  // RENDER
   // ----------------------------------------------------------------------------
   const consonantClasses = ["Middle Class", "High Class", "Low Class"];
 
@@ -323,7 +317,7 @@ const Index: React.FC = () => {
               >
                 All Classes
               </Button>
-              {consonantClasses.map((classType) => (
+              {["Middle Class", "High Class", "Low Class"].map((classType) => (
                 <Button
                   key={classType}
                   size="sm"
