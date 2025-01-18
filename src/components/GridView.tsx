@@ -7,6 +7,7 @@ const GridView: React.FC<ViewProps> = ({
   items,
   selectedCategory,
   hideRomanization,
+  onSelectForPractice,
 }) => {
   const renderCard = (item: any) => {
     if (!item) return null;
@@ -31,6 +32,7 @@ const GridView: React.FC<ViewProps> = ({
         letterName={item.letterName}
         class={item.class}
         hideRomanization={hideRomanization}
+        onSelectForPractice={onSelectForPractice}
       />
     );
   };

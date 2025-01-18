@@ -13,6 +13,7 @@ interface CharacterCardProps {
   class?: string;
   className?: string;
   hideRomanization?: boolean;
+  onSelectForPractice?: (char: string) => void;
 }
 
 const CharacterCard = ({
@@ -23,8 +24,15 @@ const CharacterCard = ({
   class: characterClass,
   className,
   hideRomanization = false,
+  onSelectForPractice,
 }: CharacterCardProps) => {
   const { toast } = useToast();
+
+  const handleClick = () => {
+    if (onSelectForPractice) {
+      onSelectForPractice(character);
+    }
+  };
 
   const playAudio = useCallback(
     (e: React.MouseEvent) => {
@@ -79,9 +87,10 @@ const CharacterCard = ({
       animate={{ opacity: 1, y: 0 }}
       whileHover={{ scale: 1.05 }}
       className={cn(
-        "bg-thai-light p-6 rounded-lg shadow-lg flex flex-col items-center justify-center gap-3 cursor-pointer transition-colors hover:bg-thai-primary relative",
+        "bg-thai-light p-6 rounded-lg shadow-lg flex flex-col items-center justify-center gap-3 transition-colors hover:bg-thai-primary relative",
         className
       )}
+      data-char={character}
     >
       {characterClass && (
         <div className="absolute top-2 left-2 flex items-center gap-1">
@@ -90,25 +99,62 @@ const CharacterCard = ({
           </span>
         </div>
       )}
-      <Button
-        variant="ghost"
-        size="icon"
-        className="absolute top-2 right-2 hover:bg-thai-primary/20 z-10"
-        onClick={playAudio}
-      >
-        <Volume2 className="h-4 w-4" />
-      </Button>
-      <span className="text-6xl font-bold text-thai-dark">{character}</span>
+      <div className="absolute top-2 right-2 flex gap-1">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="hover:bg-thai-primary/20"
+          onClick={(e) => {
+            e.stopPropagation();
+            if (onSelectForPractice) {
+              onSelectForPractice(character);
+            }
+          }}
+          title="View practice words"
+        >
+          <svg
+            width="15"
+            height="15"
+            viewBox="0 0 15 15"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-4 w-4"
+          >
+            <path
+              d="M7.5 1.5C4.5 1.5 2 3.5 2 6C2 8 3.5 9.5 5 10.5C5.5 11 6 11.5 6 12C6 12.5 5.5 13 5 13.5L7.5 14L10 13.5C9.5 13 9 12.5 9 12C9 11.5 9.5 11 10 10.5C11.5 9.5 13 8 13 6C13 3.5 10.5 1.5 7.5 1.5Z"
+              stroke="currentColor"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+        </Button>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="hover:bg-thai-primary/20"
+          onClick={playAudio}
+          title="Play audio"
+        >
+          <Volume2 className="h-4 w-4" />
+        </Button>
+      </div>
+      <span className="text-6xl font-bold text-thai-dark select-text">
+        {character}
+      </span>
       {!hideRomanization && (
         <>
-          <span className="text-xl text-thai-secondary font-medium">
+          <span className="text-xl text-thai-secondary font-medium select-text">
             {romanization}
           </span>
-          {meaning && <span className="text-sm text-gray-600">{meaning}</span>}
+          {meaning && (
+            <span className="text-sm text-gray-600 select-text">{meaning}</span>
+          )}
         </>
       )}
       {letterName && (
-        <span className="text-sm text-thai-secondary">{letterName}</span>
+        <span className="text-sm text-thai-secondary select-text">
+          {letterName}
+        </span>
       )}
     </motion.div>
   );

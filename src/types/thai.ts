@@ -18,6 +18,7 @@ export interface ViewProps {
   items: ThaiItem[];
   selectedCategory: string;
   currentIndex?: number;
-  onNavigate?: (direction: 'prev' | 'next') => void;
+  onNavigate?: (direction: "prev" | "next") => void;
   hideRomanization?: boolean;
+  onSelectForPractice?: (char: string) => void;
 }

@@ -10,9 +10,14 @@ import {
   THAI_CHARACTERS,
   THAI_CONSONANTS,
 } from "@/data/thaiCharacters";
-import { ThaiItem } from "@/types/thai";
+import { ThaiItem, ThaiWord } from "@/types/thai";
 import { Button } from "@/components/ui/button";
 import { Toggle } from "@/components/ui/toggle";
+import { cn } from "@/lib/utils";
+
+const isThaiWord = (item: ThaiItem): item is ThaiWord => {
+  return "word" in item;
+};
 
 const Index = () => {
   const [selectedCategory, setSelectedCategory] = useState(CATEGORIES[0]);
@@ -20,11 +25,34 @@ const Index = () => {
   const [isSingleCardMode, setIsSingleCardMode] = useState(false);
   const [currentCardIndex, setCurrentCardIndex] = useState(0);
   const [hideRomanization, setHideRomanization] = useState(false);
+  const [selectedCharacter, setSelectedCharacter] = useState<string | null>(
+    null
+  );
+  const [previousCharacter, setPreviousCharacter] = useState<string | null>(
+    null
+  );
 
   useEffect(() => {
     setCurrentCardIndex(0);
+    if (selectedCategory !== "Practice") {
+      setSelectedCharacter(null);
+    }
     setSelectedClass(null);
   }, [selectedCategory]);
+
+  useEffect(() => {
+    if (selectedCategory === "Consonants" && previousCharacter) {
+      setTimeout(() => {
+        const charElement = document.querySelector(
+          `[data-char="${previousCharacter}"]`
+        );
+        if (charElement) {
+          charElement.scrollIntoView({ behavior: "smooth", block: "center" });
+        }
+      }, 100);
+      setPreviousCharacter(null);
+    }
+  }, [selectedCategory, previousCharacter]);
 
   const isValidClass = (
     className: string
@@ -32,9 +60,43 @@ const Index = () => {
     return ["Middle Class", "High Class", "Low Class"].includes(className);
   };
 
-  const getCurrentCategoryData = (): ThaiItem[] => {
+  const handleSelectForPractice = (char: string) => {
+    console.log("Selecting character for practice:", char);
+    setPreviousCharacter(char);
+    setSelectedCharacter(char);
+    setSelectedCategory("Practice");
+    setCurrentCardIndex(0);
+  };
+
+  const getCurrentCategoryData = React.useCallback((): ThaiItem[] => {
+    console.log("Getting category data:", {
+      selectedCategory,
+      selectedCharacter,
+      selectedClass,
+    });
+
     let items =
       THAI_CHARACTERS[selectedCategory as keyof typeof THAI_CHARACTERS] || [];
+
+    if (selectedCategory === "Practice" && selectedCharacter) {
+      console.log("Filtering practice items for character:", selectedCharacter);
+      const practiceItems = THAI_CHARACTERS.Practice as ThaiWord[];
+      const filteredItems = practiceItems.filter((word) => {
+        const normalizedWord = word.word
+          .normalize("NFD")
+          .replace(/[\u0300-\u036f]/g, "");
+        const normalizedChar = selectedCharacter
+          .normalize("NFD")
+          .replace(/[\u0300-\u036f]/g, "");
+        const matches = normalizedWord.includes(normalizedChar);
+        console.log(
+          `Word: ${word.word}, Normalized: ${normalizedWord}, Matches: ${matches}`
+        );
+        return matches;
+      });
+      console.log("Filtered items:", filteredItems.length, "matches found");
+      return filteredItems;
+    }
 
     if (selectedCategory === "Consonants") {
       if (selectedClass && isValidClass(selectedClass)) {
@@ -44,7 +106,6 @@ const Index = () => {
             class: selectedClass,
           })) || [];
       } else {
-        // If no class is selected, combine all classes with their class information
         items = Object.entries(THAI_CONSONANTS).flatMap(
           ([className, chars]) => {
             if (isValidClass(className)) {
@@ -60,7 +121,7 @@ const Index = () => {
     }
 
     return items;
-  };
+  }, [selectedCategory, selectedCharacter, selectedClass]);
 
   const handleNavigation = (direction: "prev" | "next") => {
     const categoryData = getCurrentCategoryData();
@@ -77,97 +138,161 @@ const Index = () => {
 
   const consonantClasses = ["Middle Class", "High Class", "Low Class"];
 
+  const currentItems = React.useMemo(
+    () => getCurrentCategoryData(),
+    [getCurrentCategoryData]
+  );
+
   return (
-    <div className="min-h-screen bg-gradient-to-b from-thai-primary to-white p-8">
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="max-w-6xl mx-auto"
-      >
-        <h1 className="text-4xl md:text-5xl font-bold text-thai-dark text-center mb-4">
-          Learn Thai Alphabet
-        </h1>
-        <p className="text-lg text-gray-600 text-center mb-8">
-          Master the Thai script with our interactive learning tools
-        </p>
-
-        <CategorySelector
-          categories={CATEGORIES}
-          selectedCategory={selectedCategory}
-          onSelectCategory={setSelectedCategory}
-        />
-
-        <div className="flex justify-center gap-4 mb-4">
-          <ToggleGroup
-            type="single"
-            value={isSingleCardMode ? "single" : "grid"}
-            onValueChange={(value) => setIsSingleCardMode(value === "single")}
-          >
-            <ToggleGroupItem value="grid" aria-label="Grid View">
-              <Grid2X2 className="h-4 w-4" />
-            </ToggleGroupItem>
-            <ToggleGroupItem value="single" aria-label="Single Card View">
-              <Focus className="h-4 w-4" />
-            </ToggleGroupItem>
-          </ToggleGroup>
-
-          <Toggle
-            aria-label="Toggle romanization"
-            pressed={hideRomanization}
-            onPressedChange={setHideRomanization}
-            className="data-[state=on]:bg-thai-secondary"
-          >
-            {hideRomanization ? (
-              <EyeOff className="h-4 w-4 mr-2" />
-            ) : (
-              <Eye className="h-4 w-4 mr-2" />
-            )}
-            {hideRomanization ? "Show Romanization" : "Hide Romanization"}
-          </Toggle>
-        </div>
-
-        {selectedCategory === "Consonants" && (
-          <div className="flex flex-wrap gap-2 justify-center mb-6">
-            <Button
-              variant="ghost"
-              onClick={() => setSelectedClass(null)}
-              className={!selectedClass ? "bg-thai-secondary text-white" : ""}
-            >
-              All Classes
-            </Button>
-            {consonantClasses.map((classType) => (
-              <Button
-                key={classType}
-                variant="ghost"
-                onClick={() => setSelectedClass(classType)}
-                className={
-                  selectedClass === classType
-                    ? "bg-thai-secondary text-white"
-                    : ""
+    <div className="min-h-screen bg-gradient-to-b from-thai-primary to-white">
+      {/* Main Header - Always visible */}
+      <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-sm shadow-sm">
+        <div className="max-w-6xl mx-auto px-4 py-2">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              {selectedCategory === "Practice" && selectedCharacter && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="flex items-center gap-1 text-gray-600 hover:text-thai-dark"
+                  onClick={() => {
+                    setPreviousCharacter(selectedCharacter);
+                    setSelectedCategory(CATEGORIES[0]);
+                    setSelectedCharacter(null);
+                  }}
+                >
+                  ← Back
+                </Button>
+              )}
+              <h1 className="text-xl font-bold text-thai-dark">
+                Thai Alphabet
+              </h1>
+            </div>
+            <div className="flex gap-2">
+              <Toggle
+                aria-label="Toggle romanization"
+                pressed={hideRomanization}
+                onPressedChange={setHideRomanization}
+                className="h-8 data-[state=on]:bg-thai-secondary"
+              >
+                {hideRomanization ? (
+                  <EyeOff className="h-4 w-4" />
+                ) : (
+                  <Eye className="h-4 w-4" />
+                )}
+              </Toggle>
+              <ToggleGroup
+                type="single"
+                value={isSingleCardMode ? "single" : "grid"}
+                onValueChange={(value) =>
+                  setIsSingleCardMode(value === "single")
                 }
               >
-                {classType}
+                <ToggleGroupItem
+                  value="grid"
+                  aria-label="Grid View"
+                  className="h-8 w-8 p-0"
+                >
+                  <Grid2X2 className="h-4 w-4" />
+                </ToggleGroupItem>
+                <ToggleGroupItem
+                  value="single"
+                  aria-label="Single Card View"
+                  className="h-8 w-8 p-0"
+                >
+                  <Focus className="h-4 w-4" />
+                </ToggleGroupItem>
+              </ToggleGroup>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      {/* Category Navigation */}
+      <nav className="sticky top-[56px] z-40 bg-white/80 backdrop-blur-sm border-b">
+        <div className="max-w-6xl mx-auto px-4">
+          <div className="flex gap-1 overflow-x-auto pb-2 pt-2 hide-scrollbar">
+            {CATEGORIES.map((category) => (
+              <Button
+                key={category}
+                variant={selectedCategory === category ? "default" : "ghost"}
+                className={cn(
+                  "rounded-full px-4 py-1 text-sm whitespace-nowrap",
+                  selectedCategory === category
+                    ? "bg-thai-secondary text-white"
+                    : "hover:bg-thai-secondary/10"
+                )}
+                onClick={() => setSelectedCategory(category)}
+              >
+                {category}
+                {category === "Practice" && selectedCharacter && (
+                  <span className="ml-2 text-xs">({selectedCharacter})</span>
+                )}
               </Button>
             ))}
           </div>
-        )}
 
+          {/* Consonant Classes - Only show for Consonants */}
+          {selectedCategory === "Consonants" && (
+            <div className="flex gap-1 overflow-x-auto pb-2 hide-scrollbar">
+              <Button
+                size="sm"
+                variant="ghost"
+                className={cn(
+                  "rounded-full px-3 text-xs whitespace-nowrap",
+                  !selectedClass ? "bg-thai-secondary/20" : ""
+                )}
+                onClick={() => setSelectedClass(null)}
+              >
+                All Classes
+              </Button>
+              {consonantClasses.map((classType) => (
+                <Button
+                  key={classType}
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => setSelectedClass(classType)}
+                  className={cn(
+                    "rounded-full px-3 text-xs whitespace-nowrap",
+                    selectedClass === classType ? "bg-thai-secondary/20" : ""
+                  )}
+                >
+                  {classType}
+                </Button>
+              ))}
+            </div>
+          )}
+        </div>
+      </nav>
+
+      {/* Main Content */}
+      <main className="max-w-6xl mx-auto p-4">
         {isSingleCardMode ? (
           <SingleCardView
-            items={getCurrentCategoryData()}
+            items={currentItems}
             selectedCategory={selectedCategory}
             currentIndex={currentCardIndex}
             onNavigate={handleNavigation}
             hideRomanization={hideRomanization}
+            onSelectForPractice={
+              selectedCategory !== "Practice"
+                ? handleSelectForPractice
+                : undefined
+            }
           />
         ) : (
           <GridView
-            items={getCurrentCategoryData()}
+            items={currentItems}
             selectedCategory={selectedCategory}
             hideRomanization={hideRomanization}
+            onSelectForPractice={
+              selectedCategory !== "Practice"
+                ? handleSelectForPractice
+                : undefined
+            }
           />
         )}
-      </motion.div>
+      </main>
     </div>
   );
 };

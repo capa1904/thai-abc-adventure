@@ -12,6 +12,7 @@ const SingleCardView: React.FC<ViewProps> = ({
   currentIndex = 0,
   onNavigate,
   hideRomanization,
+  onSelectForPractice,
 }) => {
   const currentItem = items[currentIndex];
 
@@ -36,6 +37,7 @@ const SingleCardView: React.FC<ViewProps> = ({
         letterName={item.letterName}
         class={item.class}
         hideRomanization={hideRomanization}
+        onSelectForPractice={onSelectForPractice}
       />
     );
   };
