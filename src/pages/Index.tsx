@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { motion } from "framer-motion";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Grid2X2, Focus, Eye, EyeOff } from "lucide-react";
 import GridView from "@/components/GridView";
@@ -8,20 +9,21 @@ import {
   THAI_CHARACTERS,
   THAI_CONSONANTS,
 } from "@/data/thaiCharacters";
-import { ThaiItem, ThaiWord } from "@/types/thai";
+import { ThaiItem, ThaiWord, ThaiCharacter } from "@/types/thai";
 import { Button } from "@/components/ui/button";
 import { Toggle } from "@/components/ui/toggle";
 import { cn } from "@/lib/utils";
 import AboutDialog from "@/components/AboutDialog";
 
+// Helper-Guard
 function isThaiWord(item: ThaiItem): item is ThaiWord {
   return "word" in item;
 }
 
 const Index = () => {
-  // --------------------------------------------------------------------------
-  // 1) STATES
-  // --------------------------------------------------------------------------
+  // ----------------------------------------------------------------------------
+  // STATES
+  // ----------------------------------------------------------------------------
   const [selectedCategory, setSelectedCategory] = useState<string>(
     CATEGORIES[0]
   );
@@ -30,39 +32,29 @@ const Index = () => {
   const [currentCardIndex, setCurrentCardIndex] = useState<number>(0);
   const [hideRomanization, setHideRomanization] = useState<boolean>(false);
 
-  // Falls wir von Consonants/Vowels/Tones nach Practice wechseln:
   const [selectedCharacter, setSelectedCharacter] = useState<string | null>(
     null
   );
 
-  // Voriger Zustand, um beim Zurückkommen aus Practice wiederherzustellen:
+  // Voriger Zustand (für „Back from Practice“)
   const [previousCategory, setPreviousCategory] = useState<string | null>(null);
-  const [previousClass, setPreviousClass] = useState<string | null>(null);
+  const [previousCharacter, setPreviousCharacter] = useState<string | null>(
+    null
+  );
   const [previousViewMode, setPreviousViewMode] = useState<boolean | null>(
     null
   );
 
-  // Anstelle von `previousCardIndex`: wir speichern das *konkrete Zeichen*:
-  const [previousCharacter, setPreviousCharacter] = useState<string | null>(
-    null
-  );
-
-  // Flag, ob wir explizit aus Practice zurückkehren:
+  // Ob wir explizit aus „Practice“ zurückkehren
   const [isReturningFromPractice, setIsReturningFromPractice] = useState(false);
 
-  // **NEU**: Wir speichern uns auch die „zuletzt bekannte Category“
-  // Damit wir einen echten, manuell ausgelösten Kategorie-Wechsel erkennen können.
-  const [lastCategory, setLastCategory] = useState<string>(selectedCategory);
+  // Letzte bekannte Kategorie, um echten Wechsel von „Back“ zu unterscheiden
+  const [lastCategory, setLastCategory] = useState<string>(CATEGORIES[0]);
 
-  // --------------------------------------------------------------------------
-  // 2) EFFEKTE
-  // --------------------------------------------------------------------------
-
-  // A) Kategorie-Wechsel-Effekt („CAT-Effekt“):
-  //    Nur wenn sich selectedCategory ändert, NICHT "Practice" ist,
-  //    wir NICHT aus Practice zurückkehren => reset Index & Class, usw.
+  // ----------------------------------------------------------------------------
+  // useEffect: Echter Kategorie-Wechsel
+  // ----------------------------------------------------------------------------
   useEffect(() => {
-    // Prüfen, ob wir tatsächlich eine neue Category haben
     const categoryHasChanged = selectedCategory !== lastCategory;
     const isRealUserChange =
       categoryHasChanged &&
@@ -70,195 +62,136 @@ const Index = () => {
       !isReturningFromPractice;
 
     if (isRealUserChange) {
-      console.log(
-        "[CAT-Effekt] ECHTER Kategorienwechsel => reset index & class"
-      );
+      // Reset
       setCurrentCardIndex(0);
       setSelectedClass(null);
       setSelectedCharacter(null);
     }
 
-    // Speichere *nach* dem Check die neue Category als „lastCategory“
     setLastCategory(selectedCategory);
   }, [selectedCategory, lastCategory, isReturningFromPractice]);
 
-  // B) Wenn wir EXPLIZIT aus Practice zurückkehren:
-  //    => Category, Class, Modus wiederherstellen und Index aus previousCharacter suchen
+  // ----------------------------------------------------------------------------
+  // useEffect: Zurück aus Practice
+  // ----------------------------------------------------------------------------
   useEffect(() => {
     if (isReturningFromPractice && previousCategory) {
-      console.log("[useEffect RETURN] Start restoring old state...");
-      if (previousClass) {
-        console.log("   Restore previousClass =", previousClass);
-        setSelectedClass(previousClass);
-      }
+      // z.B. SingleCardMode wiederherstellen
       if (previousViewMode !== null) {
-        console.log("   Restore isSingleCardMode =", previousViewMode);
         setIsSingleCardMode(previousViewMode);
       }
-
-      // Minimales Timeout, damit Category+Class wirklich gesetzt sind
-      setTimeout(() => {
-        const newItems = getCurrentCategoryData();
-        console.log(
-          "   newItems =",
-          newItems.map((i) => (isThaiWord(i) ? i.word : i.char))
-        );
-
-        if (previousCharacter) {
-          console.log("[useEffect RETURN] Searching for", previousCharacter);
-          const foundIndex = newItems.findIndex((item) => {
-            if (isThaiWord(item)) {
-              return item.word === previousCharacter;
-            }
-            // ThaiCharacter
-            return item.char === previousCharacter;
-          });
-          console.log("   foundIndex =", foundIndex);
-          if (foundIndex >= 0) {
-            setCurrentCardIndex(foundIndex);
-          } else {
-            console.warn("   Not found -> index=0");
-            setCurrentCardIndex(0);
-          }
-        }
-        setIsReturningFromPractice(false);
-        setPreviousCharacter(null);
-      }, 0);
+      setIsReturningFromPractice(false);
+      setPreviousCharacter(null);
     }
-  }, [
-    isReturningFromPractice,
-    previousCategory,
-    previousClass,
-    previousViewMode,
-    previousCharacter,
-  ]);
+  }, [isReturningFromPractice, previousCategory, previousViewMode]);
 
-  // --------------------------------------------------------------------------
-  // 3) DATEN-FUNKTION: getCurrentCategoryData
-  // --------------------------------------------------------------------------
+  // ----------------------------------------------------------------------------
+  // getCurrentCategoryData
+  // ----------------------------------------------------------------------------
   const getCurrentCategoryData = React.useCallback((): ThaiItem[] => {
-    let items =
-      THAI_CHARACTERS[selectedCategory as keyof typeof THAI_CHARACTERS] || [];
-    console.log("[getCurrentCategoryData]", selectedCategory, "base =", items);
-
-    // Practice + selectedCharacter => Filter
-    if (selectedCategory === "Practice" && selectedCharacter) {
+    if (selectedCategory === "Practice") {
       const practiceItems = THAI_CHARACTERS.Practice as ThaiWord[];
-      const normalizedChar = selectedCharacter
+      // Falls kein bestimmtes Zeichen => alle
+      if (!selectedCharacter) {
+        return practiceItems;
+      }
+      // Sonst filtern
+      const normChar = selectedCharacter
         .normalize("NFD")
         .replace(/[\u0300-\u036f]/g, "");
-      items = practiceItems.filter((word) => {
+      return practiceItems.filter((word) => {
         const normWord = word.word
           .normalize("NFD")
           .replace(/[\u0300-\u036f]/g, "");
-        return normWord.includes(normalizedChar);
+        return normWord.includes(normChar);
       });
-      console.log("[getCurrentCategoryData] => Practice filter =>", items);
-      return items;
     }
 
-    // Consonants + optionaler Class-Filter
     if (selectedCategory === "Consonants") {
       if (
         selectedClass &&
         ["Middle Class", "High Class", "Low Class"].includes(selectedClass)
       ) {
-        console.log(
-          "[getCurrentCategoryData] => Consonants, class =",
-          selectedClass
-        );
-        items = THAI_CONSONANTS[selectedClass].map((char) => ({
-          ...char,
+        const cArray = THAI_CONSONANTS[selectedClass];
+        return cArray.map((c) => ({
+          ...c,
           class: selectedClass as "Middle Class" | "High Class" | "Low Class",
         }));
       } else {
-        console.log("[getCurrentCategoryData] => Consonants, ALL classes");
-        items = Object.entries(THAI_CONSONANTS).flatMap(
-          ([className, chars]) => {
-            return chars.map((char) => ({
-              ...char,
-              class: className as "Middle Class" | "High Class" | "Low Class",
-            }));
-          }
+        // Alle Klassen
+        return Object.entries(THAI_CONSONANTS).flatMap(([cls, chars]) =>
+          chars.map((c) => ({
+            ...c,
+            class: cls as "Middle Class" | "High Class" | "Low Class",
+          }))
         );
       }
     }
 
-    console.log("[getCurrentCategoryData] => final =", items);
-    return items;
+    if (selectedCategory === "Vowels") {
+      return THAI_CHARACTERS.Vowels as ThaiCharacter[];
+    }
+    if (selectedCategory === "Tones") {
+      return THAI_CHARACTERS.Tones as ThaiCharacter[];
+    }
+    return [];
   }, [selectedCategory, selectedCharacter, selectedClass]);
 
-  // Memoisiertes Array
   const currentItems = React.useMemo(
     () => getCurrentCategoryData(),
     [getCurrentCategoryData]
   );
 
-  // --------------------------------------------------------------------------
-  // 4) NAVIGATION IM SINGLE-CARD-VIEW
-  // --------------------------------------------------------------------------
+  // ----------------------------------------------------------------------------
+  // Navigation
+  // ----------------------------------------------------------------------------
   const handleNavigation = (direction: "prev" | "next") => {
     const items = getCurrentCategoryData();
     setCurrentCardIndex((old) => {
       if (direction === "prev") {
         return old === 0 ? items.length - 1 : old - 1;
-      } else {
-        return old === items.length - 1 ? 0 : old + 1;
       }
+      return old === items.length - 1 ? 0 : old + 1;
     });
   };
 
-  // --------------------------------------------------------------------------
-  // 5) GRID -> SINGLE-CARD
-  // --------------------------------------------------------------------------
+  // ----------------------------------------------------------------------------
+  // Grid -> SingleCard
+  // ----------------------------------------------------------------------------
   const handleFocusCard = (index: number) => {
     setCurrentCardIndex(index);
     setIsSingleCardMode(true);
   };
 
-  // --------------------------------------------------------------------------
-  // 6) WECHSEL ZU PRACTICE
-  // --------------------------------------------------------------------------
+  // ----------------------------------------------------------------------------
+  // Select for Practice
+  // ----------------------------------------------------------------------------
   const handleSelectForPractice = (char: string) => {
-    console.log("[handleSelectForPractice] storing previous state...");
     setPreviousCategory(selectedCategory);
-    setPreviousClass(selectedClass);
     setPreviousViewMode(isSingleCardMode);
     setPreviousCharacter(char);
 
-    // Jetzt umschalten auf Practice
     setSelectedCharacter(char);
     setSelectedCategory("Practice");
     setCurrentCardIndex(0);
   };
 
-  // --------------------------------------------------------------------------
-  // 7) BACK-BUTTON
-  // --------------------------------------------------------------------------
+  // ----------------------------------------------------------------------------
+  // Back-Button
+  // ----------------------------------------------------------------------------
   const handleBackClick = () => {
-    // Wenn wir in "Practice" sind => zurück
     if (selectedCategory === "Practice" && previousCategory) {
-      console.log(
-        "[handleBackClick] returning from Practice ->",
-        previousCategory
-      );
       setIsReturningFromPractice(true);
-
-      // Category zurücksetzen
       setSelectedCategory(previousCategory);
-
-      // Aus Practice -> Consonants => selectedCharacter nullen
       setSelectedCharacter(null);
     } else {
-      // Nur Single->Grid
-      console.log("[handleBackClick] toggling single->grid");
       setIsSingleCardMode(false);
     }
   };
 
-  // --------------------------------------------------------------------------
-  // RENDER
-  // --------------------------------------------------------------------------
+  // ----------------------------------------------------------------------------
+  // Render
+  // ----------------------------------------------------------------------------
   const consonantClasses = ["Middle Class", "High Class", "Low Class"];
 
   return (
@@ -284,7 +217,6 @@ const Index = () => {
               </h1>
             </div>
             <div className="flex gap-2">
-              {/* Toggle: Romanization */}
               <Toggle
                 aria-label="Toggle romanization"
                 pressed={hideRomanization}
@@ -297,8 +229,6 @@ const Index = () => {
                   <Eye className="h-4 w-4" />
                 )}
               </Toggle>
-
-              {/* Grid / Single */}
               <ToggleGroup
                 type="single"
                 value={isSingleCardMode ? "single" : "grid"}
@@ -328,10 +258,9 @@ const Index = () => {
         </div>
       </header>
 
-      {/* NAV: Kategorien & ggf. Consonant-Class */}
+      {/* CATEGORY NAV */}
       <nav className="sticky top-[56px] z-40 bg-white/80 backdrop-blur-sm border-b">
         <div className="max-w-6xl mx-auto px-4">
-          {/* Haupt-Kategorien */}
           <div className="flex gap-1 overflow-x-auto pb-2 pt-2 hide-scrollbar">
             {CATEGORIES.map((cat) => (
               <Button
@@ -353,7 +282,7 @@ const Index = () => {
             ))}
           </div>
 
-          {/* Consonant-Class Auswahl */}
+          {/* Consonant Classes */}
           {selectedCategory === "Consonants" && (
             <div className="flex gap-1 overflow-x-auto pb-2 hide-scrollbar">
               <Button
@@ -369,10 +298,10 @@ const Index = () => {
                   key={classType}
                   size="sm"
                   variant="ghost"
+                  onClick={() => setSelectedClass(classType)}
                   className={
                     selectedClass === classType ? "bg-thai-secondary/20" : ""
                   }
-                  onClick={() => setSelectedClass(classType)}
                 >
                   {classType}
                 </Button>
@@ -382,7 +311,7 @@ const Index = () => {
         </div>
       </nav>
 
-      {/* MAIN: Grid oder SingleCard */}
+      {/* MAIN CONTENT */}
       <main className="max-w-6xl mx-auto p-4">
         {isSingleCardMode ? (
           <SingleCardView
