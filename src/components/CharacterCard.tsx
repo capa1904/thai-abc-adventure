@@ -30,46 +30,79 @@ const CharacterCard = ({
 }: CharacterCardProps) => {
   const { toast } = useToast();
 
-  const handleClick = () => {
-    if (onSelectForPractice) {
-      onSelectForPractice(character);
+  // -----------------------
+  // 1) Helper: TTS fallback
+  // -----------------------
+  const playTTS = useCallback(() => {
+    if (!window.speechSynthesis) {
+      toast({
+        title: "Error",
+        description: "Text-to-speech not supported in your browser",
+        variant: "destructive",
+      });
+      return;
     }
-  };
+    const utterance = new SpeechSynthesisUtterance(letterName || character);
+    utterance.lang = "th-TH";
+    utterance.rate = 0.8;
+    utterance.volume = 1.0;
 
+    utterance.onerror = (event) => {
+      toast({
+        title: "Error",
+        description: "Failed to play TTS audio",
+        variant: "destructive",
+      });
+      console.error("SpeechSynthesis Error:", event);
+    };
+
+    window.speechSynthesis.cancel();
+    window.speechSynthesis.speak(utterance);
+  }, [letterName, character, toast]);
+
+  // ---------------------------------------------------
+  // 2) Attempt to play MP3 from /public/audio/<filename>
+  //    fallback to TTS if not found
+  // ---------------------------------------------------
   const playAudio = useCallback(
-    (e: React.MouseEvent) => {
+    async (e: React.MouseEvent) => {
       e.preventDefault();
       e.stopPropagation();
 
-      if (!window.speechSynthesis) {
-        toast({
-          title: "Error",
-          description: "Text-to-speech is not supported in your browser",
-          variant: "destructive",
-        });
-        return;
+      // Decide how to build your audio filename
+      // For example, you might slugify letterName:
+      const fileBase = (letterName || character)
+        .replace(/\s+/g, "-") // replace spaces with dash
+        .toLowerCase();
+      const audioUrl = `/audio/${fileBase}.mp3`;
+      // e.g. letterName = "กอ ไก่" => "กอ-ไก่.mp3"
+
+      try {
+        // 1) Check if file exists via HEAD request
+        const resp = await fetch(audioUrl, { method: "HEAD" });
+        if (resp.ok) {
+          // 2) We have an MP3 -> play via HTMLAudioElement
+          const audio = new Audio(audioUrl);
+          audio.play().catch((err) => {
+            console.error("Failed to play mp3:", err);
+            playTTS(); // fallback
+          });
+        } else {
+          // File not found => fallback TTS
+          playTTS();
+        }
+      } catch (err) {
+        // e.g. network error => fallback TTS
+        console.error("Audio fetch error:", err);
+        playTTS();
       }
-
-      const utterance = new SpeechSynthesisUtterance(letterName || character);
-      utterance.lang = "th-TH";
-      utterance.rate = 0.8;
-      utterance.volume = 1.0;
-
-      utterance.onerror = (event) => {
-        toast({
-          title: "Error",
-          description: "Failed to play audio",
-          variant: "destructive",
-        });
-        console.error("SpeechSynthesis Error:", event);
-      };
-
-      window.speechSynthesis.cancel();
-      window.speechSynthesis.speak(utterance);
     },
-    [letterName, character, toast]
+    [letterName, character, playTTS]
   );
 
+  // ---------------------------------------------------
+  // Consonant Class Symbol
+  // ---------------------------------------------------
   const getClassSymbol = (classType?: string) => {
     switch (classType) {
       case "Middle Class":
@@ -83,6 +116,9 @@ const CharacterCard = ({
     }
   };
 
+  // ---------------------------------------------------
+  // RENDER
+  // ---------------------------------------------------
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -101,6 +137,8 @@ const CharacterCard = ({
           </span>
         </div>
       )}
+
+      {/* Top-right buttons */}
       <div className="absolute top-2 right-2 flex gap-1">
         {onSelectForPractice && (
           <Button
@@ -140,9 +178,13 @@ const CharacterCard = ({
           <Volume2 className="h-4 w-4" />
         </Button>
       </div>
+
+      {/* Main character text */}
       <span className="text-6xl font-bold text-thai-dark select-text">
         {character}
       </span>
+
+      {/* If not hidden, show roman + meaning */}
       {!hideRomanization && (
         <>
           <span className="text-xl text-thai-secondary font-medium select-text">
@@ -153,6 +195,8 @@ const CharacterCard = ({
           )}
         </>
       )}
+
+      {/* letterName */}
       {letterName && (
         <span className="text-sm text-thai-secondary select-text">
           {letterName}
