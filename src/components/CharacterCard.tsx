@@ -98,9 +98,11 @@ const CharacterCard = ({
       </Button>
       <span className="text-6xl font-bold text-thai-dark">{character}</span>
       {!hideRomanization && (
-        <span className="text-xl text-thai-secondary font-medium">{romanization}</span>
+        <>
+          <span className="text-xl text-thai-secondary font-medium">{romanization}</span>
+          {meaning && <span className="text-sm text-gray-600">{meaning}</span>}
+        </>
       )}
-      {meaning && <span className="text-sm text-gray-600">{meaning}</span>}
       {letterName && <span className="text-sm text-thai-secondary">{letterName}</span>}
     </motion.div>
   );
