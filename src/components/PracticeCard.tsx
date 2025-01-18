@@ -63,11 +63,11 @@ const PracticeCard = ({
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      whileHover={{ scale: 1.05 }}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      whileHover={{ scale: 1.02, y: -2 }}
       className={cn(
-        "bg-thai-light p-6 rounded-lg shadow-lg flex flex-col items-center justify-center gap-3 cursor-pointer transition-colors hover:bg-thai-primary relative",
+        "bg-thai-light p-6 rounded-lg shadow-lg flex flex-col items-center justify-center gap-3 transition-all hover:bg-white hover:shadow-xl relative",
         className
       )}
     >

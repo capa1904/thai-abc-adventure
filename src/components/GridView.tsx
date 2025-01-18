@@ -1,5 +1,5 @@
 import React from "react";
-import { ViewProps } from "@/types/thai";
+import { ViewProps, ThaiItem, ThaiWord, ThaiCharacter } from "@/types/thai";
 import CharacterCard from "./CharacterCard";
 import PracticeCard from "./PracticeCard";
 
@@ -8,31 +8,35 @@ const GridView: React.FC<ViewProps> = ({
   selectedCategory,
   hideRomanization,
   onSelectForPractice,
+  onFocusCard,
 }) => {
-  const renderCard = (item: any) => {
+  const renderCard = (item: ThaiItem, index: number) => {
     if (!item) return null;
 
     if (selectedCategory === "Practice") {
+      const practiceItem = item as ThaiWord;
       return (
         <PracticeCard
-          key={item.word}
-          word={item.word}
-          phonetic={item.phonetic}
-          meaning={item.meaning}
+          key={practiceItem.word}
+          word={practiceItem.word}
+          phonetic={practiceItem.phonetic}
+          meaning={practiceItem.meaning}
           hideRomanization={hideRomanization}
         />
       );
     }
+    const characterItem = item as ThaiCharacter;
     return (
       <CharacterCard
-        key={item.char}
-        character={item.char}
-        romanization={item.romanization}
-        meaning={item.meaning}
-        letterName={item.letterName}
-        class={item.class}
+        key={characterItem.char}
+        character={characterItem.char}
+        romanization={characterItem.romanization}
+        meaning={characterItem.meaning}
+        letterName={characterItem.letterName}
+        class={characterItem.class}
         hideRomanization={hideRomanization}
         onSelectForPractice={onSelectForPractice}
+        onFocus={onFocusCard ? () => onFocusCard(index) : undefined}
       />
     );
   };
@@ -45,7 +49,7 @@ const GridView: React.FC<ViewProps> = ({
           : "grid-cols-2 md:grid-cols-3"
       }`}
     >
-      {items.map((item) => renderCard(item))}
+      {items.map((item, index) => renderCard(item, index))}
     </div>
   );
 };

@@ -14,6 +14,7 @@ import { ThaiItem, ThaiWord } from "@/types/thai";
 import { Button } from "@/components/ui/button";
 import { Toggle } from "@/components/ui/toggle";
 import { cn } from "@/lib/utils";
+import AboutDialog from "@/components/AboutDialog";
 
 const isThaiWord = (item: ThaiItem): item is ThaiWord => {
   return "word" in item;
@@ -31,14 +32,28 @@ const Index = () => {
   const [previousCharacter, setPreviousCharacter] = useState<string | null>(
     null
   );
+  const [previousCategory, setPreviousCategory] = useState<string | null>(null);
+  const [previousCardIndex, setPreviousCardIndex] = useState<number | null>(
+    null
+  );
+  const [previousViewMode, setPreviousViewMode] = useState<boolean | null>(
+    null
+  );
+  const [isReturningFromPractice, setIsReturningFromPractice] = useState(false);
 
   useEffect(() => {
-    setCurrentCardIndex(0);
+    const isReturningFromPractice =
+      previousCategory === selectedCategory && previousCardIndex !== null;
+
+    if (!isReturningFromPractice) {
+      setCurrentCardIndex(0);
+    }
+
     if (selectedCategory !== "Practice") {
       setSelectedCharacter(null);
     }
     setSelectedClass(null);
-  }, [selectedCategory]);
+  }, [selectedCategory, previousCategory, previousCardIndex]);
 
   useEffect(() => {
     if (selectedCategory === "Consonants" && previousCharacter) {
@@ -54,6 +69,21 @@ const Index = () => {
     }
   }, [selectedCategory, previousCharacter]);
 
+  useEffect(() => {
+    if (
+      isReturningFromPractice &&
+      previousCardIndex !== null &&
+      previousViewMode
+    ) {
+      setCurrentCardIndex(previousCardIndex);
+      setIsSingleCardMode(true);
+      setIsReturningFromPractice(false);
+      setPreviousCategory(null);
+      setPreviousCardIndex(null);
+      setPreviousViewMode(null);
+    }
+  }, [isReturningFromPractice, previousCardIndex, previousViewMode]);
+
   const isValidClass = (
     className: string
   ): className is "Middle Class" | "High Class" | "Low Class" => {
@@ -63,6 +93,9 @@ const Index = () => {
   const handleSelectForPractice = (char: string) => {
     console.log("Selecting character for practice:", char);
     setPreviousCharacter(char);
+    setPreviousCategory(selectedCategory);
+    setPreviousCardIndex(currentCardIndex);
+    setPreviousViewMode(isSingleCardMode);
     setSelectedCharacter(char);
     setSelectedCategory("Practice");
     setCurrentCardIndex(0);
@@ -143,6 +176,11 @@ const Index = () => {
     [getCurrentCategoryData]
   );
 
+  const handleFocusCard = (index: number) => {
+    setCurrentCardIndex(index);
+    setIsSingleCardMode(true);
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-thai-primary to-white">
       {/* Main Header - Always visible */}
@@ -150,15 +188,25 @@ const Index = () => {
         <div className="max-w-6xl mx-auto px-4 py-2">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              {selectedCategory === "Practice" && selectedCharacter && (
+              {((selectedCategory === "Practice" && selectedCharacter) ||
+                isSingleCardMode) && (
                 <Button
                   variant="ghost"
                   size="sm"
                   className="flex items-center gap-1 text-gray-600 hover:text-thai-dark"
                   onClick={() => {
-                    setPreviousCharacter(selectedCharacter);
-                    setSelectedCategory(CATEGORIES[0]);
-                    setSelectedCharacter(null);
+                    if (selectedCategory === "Practice") {
+                      const category = previousCategory || CATEGORIES[0];
+                      if (previousViewMode) {
+                        setIsReturningFromPractice(true);
+                      } else {
+                        setIsSingleCardMode(false);
+                      }
+                      setSelectedCategory(category);
+                      setSelectedCharacter(null);
+                    } else {
+                      setIsSingleCardMode(false);
+                    }
                   }}
                 >
                   ← Back
@@ -203,6 +251,8 @@ const Index = () => {
                   <Focus className="h-4 w-4" />
                 </ToggleGroupItem>
               </ToggleGroup>
+              <div className="w-px h-8 bg-gray-200 mx-1" />
+              <AboutDialog />
             </div>
           </div>
         </div>
@@ -290,6 +340,7 @@ const Index = () => {
                 ? handleSelectForPractice
                 : undefined
             }
+            onFocusCard={handleFocusCard}
           />
         )}
       </main>

@@ -21,4 +21,5 @@ export interface ViewProps {
   onNavigate?: (direction: "prev" | "next") => void;
   hideRomanization?: boolean;
   onSelectForPractice?: (char: string) => void;
+  onFocusCard?: (index: number) => void;
 }

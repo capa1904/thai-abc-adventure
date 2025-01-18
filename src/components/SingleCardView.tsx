@@ -1,5 +1,5 @@
 import React from "react";
-import { ViewProps } from "@/types/thai";
+import { ViewProps, ThaiItem, ThaiWord, ThaiCharacter } from "@/types/thai";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
@@ -18,24 +18,26 @@ const SingleCardView: React.FC<ViewProps> = ({
 
   if (!currentItem) return null;
 
-  const renderCard = (item: any) => {
+  const renderCard = (item: ThaiItem) => {
     if (selectedCategory === "Practice") {
+      const practiceItem = item as ThaiWord;
       return (
         <PracticeCard
-          word={item.word}
-          phonetic={item.phonetic}
-          meaning={item.meaning}
+          word={practiceItem.word}
+          phonetic={practiceItem.phonetic}
+          meaning={practiceItem.meaning}
           hideRomanization={hideRomanization}
         />
       );
     }
+    const characterItem = item as ThaiCharacter;
     return (
       <CharacterCard
-        character={item.char}
-        romanization={item.romanization}
-        meaning={item.meaning}
-        letterName={item.letterName}
-        class={item.class}
+        character={characterItem.char}
+        romanization={characterItem.romanization}
+        meaning={characterItem.meaning}
+        letterName={characterItem.letterName}
+        class={characterItem.class}
         hideRomanization={hideRomanization}
         onSelectForPractice={onSelectForPractice}
       />
@@ -48,13 +50,12 @@ const SingleCardView: React.FC<ViewProps> = ({
         <AnimatePresence initial={false} mode="wait">
           <motion.div
             key={currentIndex}
-            initial={{ opacity: 0, x: 100 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -100 }}
+            initial={{ x: 50 }}
+            animate={{ x: 0 }}
+            exit={{ x: -50 }}
             transition={{
-              type: "spring",
-              stiffness: 300,
-              damping: 30,
+              duration: 0.12,
+              ease: "easeOut",
             }}
             className="w-full"
           >
