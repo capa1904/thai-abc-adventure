@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Grid2X2, Focus, Eye, EyeOff } from "lucide-react";
-import CategorySelector from "@/components/CategorySelector";
 import GridView from "@/components/GridView";
 import SingleCardView from "@/components/SingleCardView";
 import {
@@ -10,204 +9,205 @@ import {
   THAI_CHARACTERS,
   THAI_CONSONANTS,
 } from "@/data/thaiCharacters";
-import { ThaiItem, ThaiWord } from "@/types/thai";
+import { ThaiItem, ThaiWord, ThaiCharacter } from "@/types/thai";
 import { Button } from "@/components/ui/button";
 import { Toggle } from "@/components/ui/toggle";
 import { cn } from "@/lib/utils";
 import AboutDialog from "@/components/AboutDialog";
 
-const isThaiWord = (item: ThaiItem): item is ThaiWord => {
+// Helper-Guard
+function isThaiWord(item: ThaiItem): item is ThaiWord {
   return "word" in item;
-};
+}
 
 const Index = () => {
-  const [selectedCategory, setSelectedCategory] = useState(CATEGORIES[0]);
+  // ----------------------------------------------------------------------------
+  // STATES
+  // ----------------------------------------------------------------------------
+  const [selectedCategory, setSelectedCategory] = useState<string>(
+    CATEGORIES[0]
+  );
   const [selectedClass, setSelectedClass] = useState<string | null>(null);
-  const [isSingleCardMode, setIsSingleCardMode] = useState(false);
-  const [currentCardIndex, setCurrentCardIndex] = useState(0);
-  const [hideRomanization, setHideRomanization] = useState(false);
+  const [isSingleCardMode, setIsSingleCardMode] = useState<boolean>(false);
+  const [currentCardIndex, setCurrentCardIndex] = useState<number>(0);
+  const [hideRomanization, setHideRomanization] = useState<boolean>(false);
+
   const [selectedCharacter, setSelectedCharacter] = useState<string | null>(
     null
   );
-  const [previousCharacter, setPreviousCharacter] = useState<string | null>(
-    null
-  );
+
+  // Voriger Zustand (für „Back from Practice“)
   const [previousCategory, setPreviousCategory] = useState<string | null>(null);
-  const [previousCardIndex, setPreviousCardIndex] = useState<number | null>(
+  const [previousCharacter, setPreviousCharacter] = useState<string | null>(
     null
   );
   const [previousViewMode, setPreviousViewMode] = useState<boolean | null>(
     null
   );
+
+  // Ob wir explizit aus „Practice“ zurückkehren
   const [isReturningFromPractice, setIsReturningFromPractice] = useState(false);
 
+  // Letzte bekannte Kategorie, um echten Wechsel von „Back“ zu unterscheiden
+  const [lastCategory, setLastCategory] = useState<string>(CATEGORIES[0]);
+
+  // ----------------------------------------------------------------------------
+  // useEffect: Echter Kategorie-Wechsel
+  // ----------------------------------------------------------------------------
   useEffect(() => {
-    const isReturningFromPractice =
-      previousCategory === selectedCategory && previousCardIndex !== null;
+    const categoryHasChanged = selectedCategory !== lastCategory;
+    const isRealUserChange =
+      categoryHasChanged &&
+      selectedCategory !== "Practice" &&
+      !isReturningFromPractice;
 
-    if (!isReturningFromPractice) {
+    if (isRealUserChange) {
+      // Reset
       setCurrentCardIndex(0);
-    }
-
-    if (selectedCategory !== "Practice") {
+      setSelectedClass(null);
       setSelectedCharacter(null);
     }
-    setSelectedClass(null);
-  }, [selectedCategory, previousCategory, previousCardIndex]);
 
+    setLastCategory(selectedCategory);
+  }, [selectedCategory, lastCategory, isReturningFromPractice]);
+
+  // ----------------------------------------------------------------------------
+  // useEffect: Zurück aus Practice
+  // ----------------------------------------------------------------------------
   useEffect(() => {
-    if (selectedCategory === "Consonants" && previousCharacter) {
-      setTimeout(() => {
-        const charElement = document.querySelector(
-          `[data-char="${previousCharacter}"]`
-        );
-        if (charElement) {
-          charElement.scrollIntoView({ behavior: "smooth", block: "center" });
-        }
-      }, 100);
+    if (isReturningFromPractice && previousCategory) {
+      // z.B. SingleCardMode wiederherstellen
+      if (previousViewMode !== null) {
+        setIsSingleCardMode(previousViewMode);
+      }
+      setIsReturningFromPractice(false);
       setPreviousCharacter(null);
     }
-  }, [selectedCategory, previousCharacter]);
+  }, [isReturningFromPractice, previousCategory, previousViewMode]);
 
-  useEffect(() => {
-    if (
-      isReturningFromPractice &&
-      previousCardIndex !== null &&
-      previousViewMode
-    ) {
-      setCurrentCardIndex(previousCardIndex);
-      setIsSingleCardMode(true);
-      setIsReturningFromPractice(false);
-      setPreviousCategory(null);
-      setPreviousCardIndex(null);
-      setPreviousViewMode(null);
-    }
-  }, [isReturningFromPractice, previousCardIndex, previousViewMode]);
-
-  const isValidClass = (
-    className: string
-  ): className is "Middle Class" | "High Class" | "Low Class" => {
-    return ["Middle Class", "High Class", "Low Class"].includes(className);
-  };
-
-  const handleSelectForPractice = (char: string) => {
-    console.log("Selecting character for practice:", char);
-    setPreviousCharacter(char);
-    setPreviousCategory(selectedCategory);
-    setPreviousCardIndex(currentCardIndex);
-    setPreviousViewMode(isSingleCardMode);
-    setSelectedCharacter(char);
-    setSelectedCategory("Practice");
-    setCurrentCardIndex(0);
-  };
-
+  // ----------------------------------------------------------------------------
+  // getCurrentCategoryData
+  // ----------------------------------------------------------------------------
   const getCurrentCategoryData = React.useCallback((): ThaiItem[] => {
-    console.log("Getting category data:", {
-      selectedCategory,
-      selectedCharacter,
-      selectedClass,
-    });
-
-    let items =
-      THAI_CHARACTERS[selectedCategory as keyof typeof THAI_CHARACTERS] || [];
-
-    if (selectedCategory === "Practice" && selectedCharacter) {
-      console.log("Filtering practice items for character:", selectedCharacter);
+    if (selectedCategory === "Practice") {
       const practiceItems = THAI_CHARACTERS.Practice as ThaiWord[];
-      const filteredItems = practiceItems.filter((word) => {
-        const normalizedWord = word.word
+      // Falls kein bestimmtes Zeichen => alle
+      if (!selectedCharacter) {
+        return practiceItems;
+      }
+      // Sonst filtern
+      const normChar = selectedCharacter
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "");
+      return practiceItems.filter((word) => {
+        const normWord = word.word
           .normalize("NFD")
           .replace(/[\u0300-\u036f]/g, "");
-        const normalizedChar = selectedCharacter
-          .normalize("NFD")
-          .replace(/[\u0300-\u036f]/g, "");
-        const matches = normalizedWord.includes(normalizedChar);
-        console.log(
-          `Word: ${word.word}, Normalized: ${normalizedWord}, Matches: ${matches}`
-        );
-        return matches;
+        return normWord.includes(normChar);
       });
-      console.log("Filtered items:", filteredItems.length, "matches found");
-      return filteredItems;
     }
 
     if (selectedCategory === "Consonants") {
-      if (selectedClass && isValidClass(selectedClass)) {
-        items =
-          THAI_CONSONANTS[selectedClass].map((char) => ({
-            ...char,
-            class: selectedClass,
-          })) || [];
+      if (
+        selectedClass &&
+        ["Middle Class", "High Class", "Low Class"].includes(selectedClass)
+      ) {
+        const cArray = THAI_CONSONANTS[selectedClass];
+        return cArray.map((c) => ({
+          ...c,
+          class: selectedClass as "Middle Class" | "High Class" | "Low Class",
+        }));
       } else {
-        items = Object.entries(THAI_CONSONANTS).flatMap(
-          ([className, chars]) => {
-            if (isValidClass(className)) {
-              return chars.map((char) => ({
-                ...char,
-                class: className,
-              }));
-            }
-            return [];
-          }
+        // Alle Klassen
+        return Object.entries(THAI_CONSONANTS).flatMap(([cls, chars]) =>
+          chars.map((c) => ({
+            ...c,
+            class: cls as "Middle Class" | "High Class" | "Low Class",
+          }))
         );
       }
     }
 
-    return items;
-  }, [selectedCategory, selectedCharacter, selectedClass]);
-
-  const handleNavigation = (direction: "prev" | "next") => {
-    const categoryData = getCurrentCategoryData();
-    if (direction === "prev") {
-      setCurrentCardIndex((prev) =>
-        prev === 0 ? categoryData.length - 1 : prev - 1
-      );
-    } else {
-      setCurrentCardIndex((prev) =>
-        prev === categoryData.length - 1 ? 0 : prev + 1
-      );
+    if (selectedCategory === "Vowels") {
+      return THAI_CHARACTERS.Vowels as ThaiCharacter[];
     }
-  };
-
-  const consonantClasses = ["Middle Class", "High Class", "Low Class"];
+    if (selectedCategory === "Tones") {
+      return THAI_CHARACTERS.Tones as ThaiCharacter[];
+    }
+    return [];
+  }, [selectedCategory, selectedCharacter, selectedClass]);
 
   const currentItems = React.useMemo(
     () => getCurrentCategoryData(),
     [getCurrentCategoryData]
   );
 
+  // ----------------------------------------------------------------------------
+  // Navigation
+  // ----------------------------------------------------------------------------
+  const handleNavigation = (direction: "prev" | "next") => {
+    const items = getCurrentCategoryData();
+    setCurrentCardIndex((old) => {
+      if (direction === "prev") {
+        return old === 0 ? items.length - 1 : old - 1;
+      }
+      return old === items.length - 1 ? 0 : old + 1;
+    });
+  };
+
+  // ----------------------------------------------------------------------------
+  // Grid -> SingleCard
+  // ----------------------------------------------------------------------------
   const handleFocusCard = (index: number) => {
     setCurrentCardIndex(index);
     setIsSingleCardMode(true);
   };
 
+  // ----------------------------------------------------------------------------
+  // Select for Practice
+  // ----------------------------------------------------------------------------
+  const handleSelectForPractice = (char: string) => {
+    setPreviousCategory(selectedCategory);
+    setPreviousViewMode(isSingleCardMode);
+    setPreviousCharacter(char);
+
+    setSelectedCharacter(char);
+    setSelectedCategory("Practice");
+    setCurrentCardIndex(0);
+  };
+
+  // ----------------------------------------------------------------------------
+  // Back-Button
+  // ----------------------------------------------------------------------------
+  const handleBackClick = () => {
+    if (selectedCategory === "Practice" && previousCategory) {
+      setIsReturningFromPractice(true);
+      setSelectedCategory(previousCategory);
+      setSelectedCharacter(null);
+    } else {
+      setIsSingleCardMode(false);
+    }
+  };
+
+  // ----------------------------------------------------------------------------
+  // Render
+  // ----------------------------------------------------------------------------
+  const consonantClasses = ["Middle Class", "High Class", "Low Class"];
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-thai-primary to-white">
-      {/* Main Header - Always visible */}
+      {/* HEADER */}
       <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-sm shadow-sm">
         <div className="max-w-6xl mx-auto px-4 py-2">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              {((selectedCategory === "Practice" && selectedCharacter) ||
+              {((selectedCategory === "Practice" && previousCategory) ||
                 isSingleCardMode) && (
                 <Button
                   variant="ghost"
                   size="sm"
                   className="flex items-center gap-1 text-gray-600 hover:text-thai-dark"
-                  onClick={() => {
-                    if (selectedCategory === "Practice") {
-                      const category = previousCategory || CATEGORIES[0];
-                      if (previousViewMode) {
-                        setIsReturningFromPractice(true);
-                      } else {
-                        setIsSingleCardMode(false);
-                      }
-                      setSelectedCategory(category);
-                      setSelectedCharacter(null);
-                    } else {
-                      setIsSingleCardMode(false);
-                    }
-                  }}
+                  onClick={handleBackClick}
                 >
                   ← Back
                 </Button>
@@ -258,40 +258,37 @@ const Index = () => {
         </div>
       </header>
 
-      {/* Category Navigation */}
+      {/* CATEGORY NAV */}
       <nav className="sticky top-[56px] z-40 bg-white/80 backdrop-blur-sm border-b">
         <div className="max-w-6xl mx-auto px-4">
           <div className="flex gap-1 overflow-x-auto pb-2 pt-2 hide-scrollbar">
-            {CATEGORIES.map((category) => (
+            {CATEGORIES.map((cat) => (
               <Button
-                key={category}
-                variant={selectedCategory === category ? "default" : "ghost"}
+                key={cat}
+                variant={selectedCategory === cat ? "default" : "ghost"}
                 className={cn(
                   "rounded-full px-4 py-1 text-sm whitespace-nowrap",
-                  selectedCategory === category
+                  selectedCategory === cat
                     ? "bg-thai-secondary text-white"
                     : "hover:bg-thai-secondary/10"
                 )}
-                onClick={() => setSelectedCategory(category)}
+                onClick={() => setSelectedCategory(cat)}
               >
-                {category}
-                {category === "Practice" && selectedCharacter && (
+                {cat}
+                {cat === "Practice" && selectedCharacter && (
                   <span className="ml-2 text-xs">({selectedCharacter})</span>
                 )}
               </Button>
             ))}
           </div>
 
-          {/* Consonant Classes - Only show for Consonants */}
+          {/* Consonant Classes */}
           {selectedCategory === "Consonants" && (
             <div className="flex gap-1 overflow-x-auto pb-2 hide-scrollbar">
               <Button
                 size="sm"
                 variant="ghost"
-                className={cn(
-                  "rounded-full px-3 text-xs whitespace-nowrap",
-                  !selectedClass ? "bg-thai-secondary/20" : ""
-                )}
+                className={!selectedClass ? "bg-thai-secondary/20" : ""}
                 onClick={() => setSelectedClass(null)}
               >
                 All Classes
@@ -302,10 +299,9 @@ const Index = () => {
                   size="sm"
                   variant="ghost"
                   onClick={() => setSelectedClass(classType)}
-                  className={cn(
-                    "rounded-full px-3 text-xs whitespace-nowrap",
+                  className={
                     selectedClass === classType ? "bg-thai-secondary/20" : ""
-                  )}
+                  }
                 >
                   {classType}
                 </Button>
@@ -315,7 +311,7 @@ const Index = () => {
         </div>
       </nav>
 
-      {/* Main Content */}
+      {/* MAIN CONTENT */}
       <main className="max-w-6xl mx-auto p-4">
         {isSingleCardMode ? (
           <SingleCardView
