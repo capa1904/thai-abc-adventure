@@ -23,6 +23,8 @@ const GridView: React.FC<ViewProps> = ({ items, selectedCategory }) => {
         character={item.char}
         romanization={item.romanization}
         meaning={item.meaning}
+        letterName={item.letterName}
+        class={item.class}
       />
     );
   };

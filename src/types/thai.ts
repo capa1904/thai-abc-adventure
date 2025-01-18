@@ -3,6 +3,7 @@ export interface ThaiCharacter {
   romanization: string;
   meaning?: string;
   letterName?: string;
+  class?: "Middle Class" | "High Class" | "Low Class";
 }
 
 export interface ThaiWord {

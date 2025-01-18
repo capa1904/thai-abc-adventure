@@ -10,10 +10,18 @@ interface CharacterCardProps {
   romanization: string;
   meaning?: string;
   letterName?: string;
+  class?: string;
   className?: string;
 }
 
-const CharacterCard = ({ character, romanization, meaning, letterName, className }: CharacterCardProps) => {
+const CharacterCard = ({ 
+  character, 
+  romanization, 
+  meaning, 
+  letterName, 
+  class: characterClass, 
+  className 
+}: CharacterCardProps) => {
   const { toast } = useToast();
 
   const playAudio = useCallback((e: React.MouseEvent) => {
@@ -29,13 +37,11 @@ const CharacterCard = ({ character, romanization, meaning, letterName, className
       return;
     }
 
-    // Create and configure the utterance
     const utterance = new SpeechSynthesisUtterance(letterName || character);
-    utterance.lang = 'th-TH'; // Set language to Thai
-    utterance.rate = 0.8; // Slightly slower rate for better clarity
-    utterance.volume = 1.0; // Maximum volume
+    utterance.lang = 'th-TH';
+    utterance.rate = 0.8;
+    utterance.volume = 1.0;
 
-    // Handle errors
     utterance.onerror = (event) => {
       toast({
         title: "Error",
@@ -45,10 +51,7 @@ const CharacterCard = ({ character, romanization, meaning, letterName, className
       console.error('SpeechSynthesis Error:', event);
     };
 
-    // Cancel any ongoing speech
     window.speechSynthesis.cancel();
-    
-    // Play the new utterance
     window.speechSynthesis.speak(utterance);
   }, [letterName, character, toast]);
 
@@ -62,6 +65,11 @@ const CharacterCard = ({ character, romanization, meaning, letterName, className
         className
       )}
     >
+      {characterClass && (
+        <span className="absolute top-2 left-2 text-xs text-gray-400">
+          {characterClass}
+        </span>
+      )}
       <Button 
         variant="ghost" 
         size="icon"

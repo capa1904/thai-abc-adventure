@@ -5,20 +5,29 @@ import { Grid2X2, Focus } from "lucide-react";
 import CategorySelector from "@/components/CategorySelector";
 import GridView from "@/components/GridView";
 import SingleCardView from "@/components/SingleCardView";
-import { CATEGORIES, THAI_CHARACTERS } from "@/data/thaiCharacters";
+import { CATEGORIES, THAI_CHARACTERS, THAI_CONSONANTS } from "@/data/thaiCharacters";
 import { ThaiItem } from "@/types/thai";
+import { Button } from "@/components/ui/button";
 
 const Index = () => {
   const [selectedCategory, setSelectedCategory] = useState(CATEGORIES[0]);
+  const [selectedClass, setSelectedClass] = useState<string | null>(null);
   const [isSingleCardMode, setIsSingleCardMode] = useState(false);
   const [currentCardIndex, setCurrentCardIndex] = useState(0);
 
   useEffect(() => {
     setCurrentCardIndex(0);
+    setSelectedClass(null);
   }, [selectedCategory]);
 
   const getCurrentCategoryData = (): ThaiItem[] => {
-    return THAI_CHARACTERS[selectedCategory as keyof typeof THAI_CHARACTERS] || [];
+    let items = THAI_CHARACTERS[selectedCategory as keyof typeof THAI_CHARACTERS] || [];
+    
+    if (selectedCategory === "Consonants" && selectedClass) {
+      items = THAI_CONSONANTS[selectedClass as keyof typeof THAI_CONSONANTS] || [];
+    }
+    
+    return items;
   };
 
   const handleNavigation = (direction: 'prev' | 'next') => {
@@ -33,6 +42,8 @@ const Index = () => {
       );
     }
   };
+
+  const consonantClasses = ["Middle Class", "High Class", "Low Class"];
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-thai-primary to-white p-8">
@@ -53,6 +64,28 @@ const Index = () => {
           selectedCategory={selectedCategory}
           onSelectCategory={setSelectedCategory}
         />
+
+        {selectedCategory === "Consonants" && (
+          <div className="flex flex-wrap gap-2 justify-center mb-6">
+            <Button
+              variant="ghost"
+              onClick={() => setSelectedClass(null)}
+              className={!selectedClass ? "bg-thai-secondary text-white" : ""}
+            >
+              All Classes
+            </Button>
+            {consonantClasses.map((classType) => (
+              <Button
+                key={classType}
+                variant="ghost"
+                onClick={() => setSelectedClass(classType)}
+                className={selectedClass === classType ? "bg-thai-secondary text-white" : ""}
+              >
+                {classType}
+              </Button>
+            ))}
+          </div>
+        )}
 
         <div className="flex justify-center mb-4">
           <ToggleGroup

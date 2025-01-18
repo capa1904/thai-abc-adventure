@@ -31,6 +31,8 @@ const SingleCardView: React.FC<ViewProps> = ({
         character={item.char}
         romanization={item.romanization}
         meaning={item.meaning}
+        letterName={item.letterName}
+        class={item.class}
       />
     );
   };
