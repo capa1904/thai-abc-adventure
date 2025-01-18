@@ -5,7 +5,11 @@ import { Grid2X2, Focus, Eye, EyeOff } from "lucide-react";
 import CategorySelector from "@/components/CategorySelector";
 import GridView from "@/components/GridView";
 import SingleCardView from "@/components/SingleCardView";
-import { CATEGORIES, THAI_CHARACTERS, THAI_CONSONANTS } from "@/data/thaiCharacters";
+import {
+  CATEGORIES,
+  THAI_CHARACTERS,
+  THAI_CONSONANTS,
+} from "@/data/thaiCharacters";
 import { ThaiItem } from "@/types/thai";
 import { Button } from "@/components/ui/button";
 import { Toggle } from "@/components/ui/toggle";
@@ -22,19 +26,45 @@ const Index = () => {
     setSelectedClass(null);
   }, [selectedCategory]);
 
+  const isValidClass = (
+    className: string
+  ): className is "Middle Class" | "High Class" | "Low Class" => {
+    return ["Middle Class", "High Class", "Low Class"].includes(className);
+  };
+
   const getCurrentCategoryData = (): ThaiItem[] => {
-    let items = THAI_CHARACTERS[selectedCategory as keyof typeof THAI_CHARACTERS] || [];
-    
-    if (selectedCategory === "Consonants" && selectedClass) {
-      items = THAI_CONSONANTS[selectedClass as keyof typeof THAI_CONSONANTS] || [];
+    let items =
+      THAI_CHARACTERS[selectedCategory as keyof typeof THAI_CHARACTERS] || [];
+
+    if (selectedCategory === "Consonants") {
+      if (selectedClass && isValidClass(selectedClass)) {
+        items =
+          THAI_CONSONANTS[selectedClass].map((char) => ({
+            ...char,
+            class: selectedClass,
+          })) || [];
+      } else {
+        // If no class is selected, combine all classes with their class information
+        items = Object.entries(THAI_CONSONANTS).flatMap(
+          ([className, chars]) => {
+            if (isValidClass(className)) {
+              return chars.map((char) => ({
+                ...char,
+                class: className,
+              }));
+            }
+            return [];
+          }
+        );
+      }
     }
-    
+
     return items;
   };
 
-  const handleNavigation = (direction: 'prev' | 'next') => {
+  const handleNavigation = (direction: "prev" | "next") => {
     const categoryData = getCurrentCategoryData();
-    if (direction === 'prev') {
+    if (direction === "prev") {
       setCurrentCardIndex((prev) =>
         prev === 0 ? categoryData.length - 1 : prev - 1
       );
@@ -67,28 +97,6 @@ const Index = () => {
           onSelectCategory={setSelectedCategory}
         />
 
-        {selectedCategory === "Consonants" && (
-          <div className="flex flex-wrap gap-2 justify-center mb-6">
-            <Button
-              variant="ghost"
-              onClick={() => setSelectedClass(null)}
-              className={!selectedClass ? "bg-thai-secondary text-white" : ""}
-            >
-              All Classes
-            </Button>
-            {consonantClasses.map((classType) => (
-              <Button
-                key={classType}
-                variant="ghost"
-                onClick={() => setSelectedClass(classType)}
-                className={selectedClass === classType ? "bg-thai-secondary text-white" : ""}
-              >
-                {classType}
-              </Button>
-            ))}
-          </div>
-        )}
-
         <div className="flex justify-center gap-4 mb-4">
           <ToggleGroup
             type="single"
@@ -103,22 +111,46 @@ const Index = () => {
             </ToggleGroupItem>
           </ToggleGroup>
 
-          {selectedCategory === "Consonants" && (
-            <Toggle
-              aria-label="Toggle romanization"
-              pressed={hideRomanization}
-              onPressedChange={setHideRomanization}
-              className="data-[state=on]:bg-thai-secondary"
-            >
-              {hideRomanization ? (
-                <EyeOff className="h-4 w-4 mr-2" />
-              ) : (
-                <Eye className="h-4 w-4 mr-2" />
-              )}
-              {hideRomanization ? "Show Romanization" : "Hide Romanization"}
-            </Toggle>
-          )}
+          <Toggle
+            aria-label="Toggle romanization"
+            pressed={hideRomanization}
+            onPressedChange={setHideRomanization}
+            className="data-[state=on]:bg-thai-secondary"
+          >
+            {hideRomanization ? (
+              <EyeOff className="h-4 w-4 mr-2" />
+            ) : (
+              <Eye className="h-4 w-4 mr-2" />
+            )}
+            {hideRomanization ? "Show Romanization" : "Hide Romanization"}
+          </Toggle>
         </div>
+
+        {selectedCategory === "Consonants" && (
+          <div className="flex flex-wrap gap-2 justify-center mb-6">
+            <Button
+              variant="ghost"
+              onClick={() => setSelectedClass(null)}
+              className={!selectedClass ? "bg-thai-secondary text-white" : ""}
+            >
+              All Classes
+            </Button>
+            {consonantClasses.map((classType) => (
+              <Button
+                key={classType}
+                variant="ghost"
+                onClick={() => setSelectedClass(classType)}
+                className={
+                  selectedClass === classType
+                    ? "bg-thai-secondary text-white"
+                    : ""
+                }
+              >
+                {classType}
+              </Button>
+            ))}
+          </div>
+        )}
 
         {isSingleCardMode ? (
           <SingleCardView

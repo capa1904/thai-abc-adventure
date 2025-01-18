@@ -10,46 +10,56 @@ interface PracticeCardProps {
   phonetic: string;
   meaning: string;
   className?: string;
+  hideRomanization?: boolean;
 }
 
-const PracticeCard = ({ word, phonetic, meaning, className }: PracticeCardProps) => {
+const PracticeCard = ({
+  word,
+  phonetic,
+  meaning,
+  className,
+  hideRomanization = false,
+}: PracticeCardProps) => {
   const { toast } = useToast();
 
-  const playAudio = useCallback((e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    
-    if (!window.speechSynthesis) {
-      toast({
-        title: "Error",
-        description: "Text-to-speech is not supported in your browser",
-        variant: "destructive",
-      });
-      return;
-    }
+  const playAudio = useCallback(
+    (e: React.MouseEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
 
-    // Create and configure the utterance
-    const utterance = new SpeechSynthesisUtterance(word);
-    utterance.lang = 'th-TH'; // Set language to Thai
-    utterance.rate = 0.8; // Slightly slower rate for better clarity
-    utterance.volume = 1.0; // Maximum volume
+      if (!window.speechSynthesis) {
+        toast({
+          title: "Error",
+          description: "Text-to-speech is not supported in your browser",
+          variant: "destructive",
+        });
+        return;
+      }
 
-    // Handle errors
-    utterance.onerror = (event) => {
-      toast({
-        title: "Error",
-        description: "Failed to play audio",
-        variant: "destructive",
-      });
-      console.error('SpeechSynthesis Error:', event);
-    };
+      // Create and configure the utterance
+      const utterance = new SpeechSynthesisUtterance(word);
+      utterance.lang = "th-TH"; // Set language to Thai
+      utterance.rate = 0.8; // Slightly slower rate for better clarity
+      utterance.volume = 1.0; // Maximum volume
 
-    // Cancel any ongoing speech
-    window.speechSynthesis.cancel();
-    
-    // Play the new utterance
-    window.speechSynthesis.speak(utterance);
-  }, [word, toast]);
+      // Handle errors
+      utterance.onerror = (event) => {
+        toast({
+          title: "Error",
+          description: "Failed to play audio",
+          variant: "destructive",
+        });
+        console.error("SpeechSynthesis Error:", event);
+      };
+
+      // Cancel any ongoing speech
+      window.speechSynthesis.cancel();
+
+      // Play the new utterance
+      window.speechSynthesis.speak(utterance);
+    },
+    [word, toast]
+  );
 
   return (
     <motion.div
@@ -61,8 +71,8 @@ const PracticeCard = ({ word, phonetic, meaning, className }: PracticeCardProps)
         className
       )}
     >
-      <Button 
-        variant="ghost" 
+      <Button
+        variant="ghost"
         size="icon"
         className="absolute top-2 right-2 hover:bg-thai-primary/20 z-10"
         onClick={playAudio}
@@ -70,8 +80,14 @@ const PracticeCard = ({ word, phonetic, meaning, className }: PracticeCardProps)
         <Volume2 className="h-4 w-4" />
       </Button>
       <span className="text-4xl font-bold text-thai-dark">{word}</span>
-      <span className="text-xl text-thai-secondary font-medium">{phonetic}</span>
-      <span className="text-sm text-gray-600 italic">{meaning}</span>
+      {!hideRomanization && (
+        <>
+          <span className="text-xl text-thai-secondary font-medium">
+            {phonetic}
+          </span>
+          <span className="text-sm text-gray-600 italic">{meaning}</span>
+        </>
+      )}
     </motion.div>
   );
 };

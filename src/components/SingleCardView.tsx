@@ -1,6 +1,6 @@
 import React from "react";
 import { ViewProps } from "@/types/thai";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import CharacterCard from "./CharacterCard";
@@ -24,6 +24,7 @@ const SingleCardView: React.FC<ViewProps> = ({
           word={item.word}
           phonetic={item.phonetic}
           meaning={item.meaning}
+          hideRomanization={hideRomanization}
         />
       );
     }
@@ -41,16 +42,26 @@ const SingleCardView: React.FC<ViewProps> = ({
 
   return (
     <div className="flex flex-col items-center">
-      <motion.div
-        key={currentIndex}
-        initial={{ opacity: 0, x: 50 }}
-        animate={{ opacity: 1, x: 0 }}
-        exit={{ opacity: 0, x: -50 }}
-        className="w-full max-w-lg mx-auto"
-      >
-        {renderCard(currentItem)}
-      </motion.div>
-      <div className="flex gap-4 mt-6">
+      <div className="w-full max-w-lg mx-auto">
+        <AnimatePresence initial={false} mode="wait">
+          <motion.div
+            key={currentIndex}
+            initial={{ opacity: 0, x: 100 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -100 }}
+            transition={{
+              type: "spring",
+              stiffness: 300,
+              damping: 30,
+            }}
+            className="w-full"
+          >
+            {renderCard(currentItem)}
+          </motion.div>
+        </AnimatePresence>
+      </div>
+
+      <div className="flex items-center gap-4 mt-4">
         <Button
           variant="outline"
           onClick={() => onNavigate?.("prev")}
@@ -58,6 +69,9 @@ const SingleCardView: React.FC<ViewProps> = ({
         >
           <ChevronLeft className="h-4 w-4" /> Previous
         </Button>
+        <p className="text-sm text-gray-500 min-w-[100px] text-center">
+          Card {currentIndex + 1} of {items.length}
+        </p>
         <Button
           variant="outline"
           onClick={() => onNavigate?.("next")}
@@ -66,9 +80,6 @@ const SingleCardView: React.FC<ViewProps> = ({
           Next <ChevronRight className="h-4 w-4" />
         </Button>
       </div>
-      <p className="text-sm text-gray-500 mt-2">
-        Card {currentIndex + 1} of {items.length}
-      </p>
     </div>
   );
 };

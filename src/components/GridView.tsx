@@ -3,7 +3,11 @@ import { ViewProps } from "@/types/thai";
 import CharacterCard from "./CharacterCard";
 import PracticeCard from "./PracticeCard";
 
-const GridView: React.FC<ViewProps> = ({ items, selectedCategory, hideRomanization }) => {
+const GridView: React.FC<ViewProps> = ({
+  items,
+  selectedCategory,
+  hideRomanization,
+}) => {
   const renderCard = (item: any) => {
     if (!item) return null;
 
@@ -14,6 +18,7 @@ const GridView: React.FC<ViewProps> = ({ items, selectedCategory, hideRomanizati
           word={item.word}
           phonetic={item.phonetic}
           meaning={item.meaning}
+          hideRomanization={hideRomanization}
         />
       );
     }

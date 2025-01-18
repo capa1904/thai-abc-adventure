@@ -15,56 +15,59 @@ interface CharacterCardProps {
   hideRomanization?: boolean;
 }
 
-const CharacterCard = ({ 
-  character, 
-  romanization, 
-  meaning, 
-  letterName, 
-  class: characterClass, 
+const CharacterCard = ({
+  character,
+  romanization,
+  meaning,
+  letterName,
+  class: characterClass,
   className,
-  hideRomanization = false
+  hideRomanization = false,
 }: CharacterCardProps) => {
   const { toast } = useToast();
 
-  const playAudio = useCallback((e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    
-    if (!window.speechSynthesis) {
-      toast({
-        title: "Error",
-        description: "Text-to-speech is not supported in your browser",
-        variant: "destructive",
-      });
-      return;
-    }
+  const playAudio = useCallback(
+    (e: React.MouseEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
 
-    const utterance = new SpeechSynthesisUtterance(letterName || character);
-    utterance.lang = 'th-TH';
-    utterance.rate = 0.8;
-    utterance.volume = 1.0;
+      if (!window.speechSynthesis) {
+        toast({
+          title: "Error",
+          description: "Text-to-speech is not supported in your browser",
+          variant: "destructive",
+        });
+        return;
+      }
 
-    utterance.onerror = (event) => {
-      toast({
-        title: "Error",
-        description: "Failed to play audio",
-        variant: "destructive",
-      });
-      console.error('SpeechSynthesis Error:', event);
-    };
+      const utterance = new SpeechSynthesisUtterance(letterName || character);
+      utterance.lang = "th-TH";
+      utterance.rate = 0.8;
+      utterance.volume = 1.0;
 
-    window.speechSynthesis.cancel();
-    window.speechSynthesis.speak(utterance);
-  }, [letterName, character, toast]);
+      utterance.onerror = (event) => {
+        toast({
+          title: "Error",
+          description: "Failed to play audio",
+          variant: "destructive",
+        });
+        console.error("SpeechSynthesis Error:", event);
+      };
+
+      window.speechSynthesis.cancel();
+      window.speechSynthesis.speak(utterance);
+    },
+    [letterName, character, toast]
+  );
 
   const getClassSymbol = (classType?: string) => {
-    switch(classType) {
+    switch (classType) {
       case "Middle Class":
         return "◆";
       case "High Class":
         return "▲";
       case "Low Class":
-        return "●";
+        return "▼";
       default:
         return "";
     }
@@ -82,14 +85,13 @@ const CharacterCard = ({
     >
       {characterClass && (
         <div className="absolute top-2 left-2 flex items-center gap-1">
-          <span className="text-xs text-gray-400">{characterClass}</span>
-          <span className="text-sm text-thai-secondary" title={characterClass}>
+          <span className="text-sm text-gray-300" title={characterClass}>
             {getClassSymbol(characterClass)}
           </span>
         </div>
       )}
-      <Button 
-        variant="ghost" 
+      <Button
+        variant="ghost"
         size="icon"
         className="absolute top-2 right-2 hover:bg-thai-primary/20 z-10"
         onClick={playAudio}
@@ -99,11 +101,15 @@ const CharacterCard = ({
       <span className="text-6xl font-bold text-thai-dark">{character}</span>
       {!hideRomanization && (
         <>
-          <span className="text-xl text-thai-secondary font-medium">{romanization}</span>
+          <span className="text-xl text-thai-secondary font-medium">
+            {romanization}
+          </span>
           {meaning && <span className="text-sm text-gray-600">{meaning}</span>}
         </>
       )}
-      {letterName && <span className="text-sm text-thai-secondary">{letterName}</span>}
+      {letterName && (
+        <span className="text-sm text-thai-secondary">{letterName}</span>
+      )}
     </motion.div>
   );
 };
