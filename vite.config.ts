@@ -12,12 +12,12 @@ export default defineConfig(({ mode }) => {
       host: "::",
       port: 8080,
     },
-    plugins: [react()].filter(Boolean),
+    plugins: [react()],
     base: mode === "production" ? "/thai-abc-adventure/" : "/",
-    resolve: {
-      alias: {
-        "@": path.resolve(__dirname, "./src"),
-      },
-    },
+    // resolve: {
+    //   alias: {
+    //     "@": path.resolve(__dirname, "./src"),
+    //   },
+    // },
   };
 });
