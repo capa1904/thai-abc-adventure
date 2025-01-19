@@ -22,6 +22,8 @@ const Index: React.FC = () => {
     setSelectedCharacter,
     previousCategory,
     setPreviousCategory,
+    previousCharacter,
+    setPreviousCharacter,
     previousViewMode,
     setPreviousViewMode,
     previousCardIndex,
@@ -113,7 +115,7 @@ const Index: React.FC = () => {
         hideRomanization={hideRomanization}
         onToggleRomanization={setHideRomanization}
         isSingleCardMode={isSingleCardMode}
-        onToggleViewMode={(value) => setIsSingleCardMode(value === "single")}
+        onToggleViewMode={(value: boolean) => setIsSingleCardMode(value)}
         onBackClick={handleBackClick}
         showBackButton={
           (selectedCategory === "Practice" && previousCategory) || isSingleCardMode
