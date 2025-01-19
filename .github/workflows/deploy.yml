@@ -5,6 +5,9 @@ on:
     branches:
       - release # Adjust if your branch is not 'main'
 
+permissions:
+  contents: write  # Grant write access for pushing to gh-pages
+  
 jobs:
   deploy:
     runs-on: ubuntu-latest
