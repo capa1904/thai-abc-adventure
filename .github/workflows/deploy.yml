@@ -3,7 +3,7 @@ name: Deploy to GitHub Pages
 on:
   push:
     branches:
-      - main # Adjust if your branch is not 'main'
+      - release # Adjust if your branch is not 'main'
 
 jobs:
   deploy:
