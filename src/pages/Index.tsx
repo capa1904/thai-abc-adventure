@@ -115,7 +115,7 @@ const Index: React.FC = () => {
         hideRomanization={hideRomanization}
         onToggleRomanization={setHideRomanization}
         isSingleCardMode={isSingleCardMode}
-        onToggleViewMode={(value: string) => setIsSingleCardMode(value === "single")}
+        onToggleViewMode={(value) => setIsSingleCardMode(value === "single")}
         onBackClick={handleBackClick}
         showBackButton={
           (selectedCategory === "Practice" && previousCategory) || isSingleCardMode

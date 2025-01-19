@@ -1,15 +1,9 @@
-import React, { useCallback } from "react";
+import React from "react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
-import { Volume2, BookOpen, Focus, Info } from "lucide-react";
-import { useToast } from "@/components/ui/use-toast";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { CharacterActions } from "./character/CharacterActions";
+import { CharacterInfo } from "./character/CharacterInfo";
+import { useCharacterAudio } from "./character/useCharacterAudio";
 
 interface CharacterCardProps {
   character: string;
@@ -25,7 +19,7 @@ interface CharacterCardProps {
   rareInfo?: string;
 }
 
-const CharacterCard = ({
+const CharacterCard: React.FC<CharacterCardProps> = ({
   character,
   romanization,
   meaning,
@@ -37,79 +31,9 @@ const CharacterCard = ({
   onFocus,
   isRare,
   rareInfo,
-}: CharacterCardProps) => {
-  const { toast } = useToast();
+}) => {
+  const { playAudio } = useCharacterAudio(letterName, character);
 
-  const playTTS = useCallback(() => {
-    if (!window.speechSynthesis) {
-      toast({
-        title: "Error",
-        description: "Text-to-speech not supported in your browser",
-        variant: "destructive",
-      });
-      return;
-    }
-    const utterance = new SpeechSynthesisUtterance(letterName || character);
-    utterance.lang = "th-TH";
-    utterance.rate = 0.8;
-    utterance.volume = 1.0;
-
-    utterance.onerror = (event) => {
-      toast({
-        title: "Error",
-        description: "Failed to play TTS audio",
-        variant: "destructive",
-      });
-      console.error("SpeechSynthesis Error:", event);
-    };
-
-    window.speechSynthesis.cancel();
-    window.speechSynthesis.speak(utterance);
-  }, [letterName, character, toast]);
-
-  // ---------------------------------------------------
-  // 2) Attempt to play MP3 from /public/audio/<filename>
-  //    fallback to TTS if not found
-  // ---------------------------------------------------
-  const playAudio = useCallback(
-    async (e: React.MouseEvent) => {
-      e.preventDefault();
-      e.stopPropagation();
-
-      // Decide how to build your audio filename
-      // For example, you might slugify letterName:
-      const fileBase = (letterName || character)
-        .replace(/\s+/g, "-") // replace spaces with dash
-        .toLowerCase();
-      const audioUrl = `/audio/${fileBase}.mp3`;
-      // e.g. letterName = "กอ ไก่" => "กอ-ไก่.mp3"
-
-      try {
-        // 1) Check if file exists via HEAD request
-        const resp = await fetch(audioUrl, { method: "HEAD" });
-        if (resp.ok) {
-          // 2) We have an MP3 -> play via HTMLAudioElement
-          const audio = new Audio(audioUrl);
-          audio.play().catch((err) => {
-            console.error("Failed to play mp3:", err);
-            playTTS(); // fallback
-          });
-        } else {
-          // File not found => fallback TTS
-          playTTS();
-        }
-      } catch (err) {
-        // e.g. network error => fallback TTS
-        console.error("Audio fetch error:", err);
-        playTTS();
-      }
-    },
-    [letterName, character, playTTS]
-  );
-
-  // ---------------------------------------------------
-  // Consonant Class Symbol
-  // ---------------------------------------------------
   const getClassSymbol = (classType?: string) => {
     switch (classType) {
       case "Middle Class":
@@ -142,66 +66,15 @@ const CharacterCard = ({
         </div>
       )}
 
-      {/* Top-right buttons */}
-      <div className="absolute top-2 right-2 flex gap-1">
-        {isRare && rareInfo && (
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="hover:bg-thai-primary/20"
-                >
-                  <Info className="h-4 w-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p className="max-w-xs text-sm">{rareInfo}</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        )}
-        {onSelectForPractice && (
-          <Button
-            variant="ghost"
-            size="icon"
-            className="hover:bg-thai-primary/20"
-            onClick={(e) => {
-              e.stopPropagation();
-              onSelectForPractice(character);
-            }}
-            title="View practice words"
-          >
-            <BookOpen className="h-4 w-4" />
-          </Button>
-        )}
-        {onFocus && (
-          <Button
-            variant="ghost"
-            size="icon"
-            className="hover:bg-thai-primary/20"
-            onClick={(e) => {
-              e.stopPropagation();
-              onFocus();
-            }}
-            title="Focus view"
-          >
-            <Focus className="h-4 w-4" />
-          </Button>
-        )}
-        <Button
-          variant="ghost"
-          size="icon"
-          className="hover:bg-thai-primary/20"
-          onClick={playAudio}
-          title="Play audio"
-        >
-          <Volume2 className="h-4 w-4" />
-        </Button>
-      </div>
+      <CharacterInfo isRare={isRare} rareInfo={rareInfo} />
+      
+      <CharacterActions
+        onPlayAudio={playAudio}
+        onSelectForPractice={onSelectForPractice}
+        onFocus={onFocus}
+        character={character}
+      />
 
-      {/* Main character text */}
       <span
         className={cn(
           "text-6xl font-bold select-text",
@@ -211,7 +84,6 @@ const CharacterCard = ({
         {character}
       </span>
 
-      {/* If not hidden, show roman + meaning */}
       {!hideRomanization && (
         <>
           <span className="text-xl text-thai-secondary font-medium select-text">
@@ -223,7 +95,6 @@ const CharacterCard = ({
         </>
       )}
 
-      {/* letterName */}
       {letterName && (
         <span className="text-sm text-thai-secondary select-text">
           {letterName}
