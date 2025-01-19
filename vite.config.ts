@@ -14,10 +14,10 @@ export default defineConfig(({ mode }) => {
     },
     plugins: [react()],
     base: mode === "production" ? "/thai-abc-adventure/" : "/",
-    // resolve: {
-    //   alias: {
-    //     "@": path.resolve(__dirname, "./src"),
-    //   },
-    // },
+    resolve: {
+      alias: {
+        "@": path.resolve(__dirname, "./src"),
+      },
+    },
   };
 });
