@@ -4,15 +4,12 @@ export interface ThaiCharacter {
   meaning?: string;
   letterName?: string;
   class?: "Middle Class" | "High Class" | "Low Class";
+  isRare?: boolean;
+  rareInfo?: string;
 }
 
 export interface ThaiWord {
-  /**
-   * Eindeutiger Bezeichner (optional),
-   * um z. B. Duplicate-Keys in React zu vermeiden.
-   */
   id?: string;
-
   word: string;
   phonetic: string;
   meaning: string;
