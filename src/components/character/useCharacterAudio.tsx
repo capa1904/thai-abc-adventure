@@ -1,7 +1,10 @@
 import { useCallback } from "react";
 import { useToast } from "@/components/ui/use-toast";
 
-export const useCharacterAudio = (letterName: string | undefined, character: string) => {
+export const useCharacterAudio = (
+  letterName: string | undefined,
+  character: string
+) => {
   const { toast } = useToast();
 
   const playTTS = useCallback(() => {
@@ -39,7 +42,7 @@ export const useCharacterAudio = (letterName: string | undefined, character: str
       const fileBase = (letterName || character)
         .replace(/\s+/g, "-")
         .toLowerCase();
-      const audioUrl = `/audio/${fileBase}.mp3`;
+      const audioUrl = `/thai-abc-adventure/audio/${fileBase}.mp3`;
 
       try {
         const resp = await fetch(audioUrl, { method: "HEAD" });
