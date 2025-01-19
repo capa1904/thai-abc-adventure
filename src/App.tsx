@@ -12,7 +12,7 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
-      <BrowserRouter basename="/thai-abc-adventure">
+      <BrowserRouter>
         <Routes>
           <Route path="/" element={<Index />} />
         </Routes>
