@@ -2,8 +2,14 @@ import React, { useCallback } from "react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { Volume2, BookOpen, Focus } from "lucide-react";
+import { Volume2, BookOpen, Focus, Info } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface CharacterCardProps {
   character: string;
@@ -15,6 +21,8 @@ interface CharacterCardProps {
   hideRomanization?: boolean;
   onSelectForPractice?: (char: string) => void;
   onFocus?: () => void;
+  isRare?: boolean;
+  rareInfo?: string;
 }
 
 const CharacterCard = ({
@@ -27,12 +35,11 @@ const CharacterCard = ({
   hideRomanization = false,
   onSelectForPractice,
   onFocus,
+  isRare,
+  rareInfo,
 }: CharacterCardProps) => {
   const { toast } = useToast();
 
-  // -----------------------
-  // 1) Helper: TTS fallback
-  // -----------------------
   const playTTS = useCallback(() => {
     if (!window.speechSynthesis) {
       toast({
@@ -116,9 +123,6 @@ const CharacterCard = ({
     }
   };
 
-  // ---------------------------------------------------
-  // RENDER
-  // ---------------------------------------------------
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -140,6 +144,24 @@ const CharacterCard = ({
 
       {/* Top-right buttons */}
       <div className="absolute top-2 right-2 flex gap-1">
+        {isRare && rareInfo && (
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="hover:bg-thai-primary/20"
+                >
+                  <Info className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p className="max-w-xs text-sm">{rareInfo}</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        )}
         {onSelectForPractice && (
           <Button
             variant="ghost"
@@ -180,7 +202,12 @@ const CharacterCard = ({
       </div>
 
       {/* Main character text */}
-      <span className="text-6xl font-bold text-thai-dark select-text">
+      <span
+        className={cn(
+          "text-6xl font-bold select-text",
+          isRare ? "text-gray-400" : "text-thai-dark"
+        )}
+      >
         {character}
       </span>
 
