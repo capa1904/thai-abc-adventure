@@ -37,6 +37,8 @@ const GridView: React.FC<ViewProps> = ({
         hideRomanization={hideRomanization}
         onSelectForPractice={onSelectForPractice}
         onFocus={onFocusCard ? () => onFocusCard(index) : undefined}
+        isRare={characterItem.isRare}
+        rareInfo={characterItem.rareInfo}
       />
     );
   };

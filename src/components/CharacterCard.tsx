@@ -66,8 +66,7 @@ const CharacterCard: React.FC<CharacterCardProps> = ({
         </div>
       )}
 
-      <CharacterInfo isRare={isRare} rareInfo={rareInfo} />
-      
+      <CharacterInfo isRare={isRare} rareInfo={rareInfo} className="absolute bottom-2 left-2" />
       <CharacterActions
         onPlayAudio={playAudio}
         onSelectForPractice={onSelectForPractice}

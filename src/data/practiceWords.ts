@@ -153,6 +153,30 @@ export const PRACTICE_WORDS: ThaiWord[] = [
   { id: "k59", word: "ถือ", phonetic: "thʉʉ", meaning: "to hold" },
   { id: "k60", word: "ยืม", phonetic: "yʉʉm", meaning: "to borrow" },
 
+  // เ
+  { id: "k61", word: "เด็ก", phonetic: "dek", meaning: "child" },
+  { id: "k62", word: "เตะ", phonetic: "te", meaning: "to kick" },
+
+  // แ
+  { id: "k63", word: "แมว", phonetic: "maew", meaning: "cat" },
+  { id: "k64", word: "แสง", phonetic: "saeng", meaning: "light" },
+
+  // โ
+  { id: "k65", word: "โต๊ะ", phonetic: "to", meaning: "table" },
+  { id: "k66", word: "โกรธ", phonetic: "grot", meaning: "angry" },
+
+  // อ
+  { id: "k67", word: "ออ", phonetic: "oo", meaning: "to exit" },
+  { id: "k68", word: "ออม", phonetic: "oom", meaning: "to save" },
+
+  // ุ
+  { id: "k69", word: "ตุ๊ก", phonetic: "tuk", meaning: "doll" },
+  { id: "k70", word: "ลุง", phonetic: "lung", meaning: "uncle" },
+
+  // ู
+  { id: "k71", word: "ดู", phonetic: "duu", meaning: "to watch" },
+  { id: "k72", word: "รู้", phonetic: "ruu", meaning: "to know" },
+
   // ------------------------------------------------------------------------
   // 4) TONES: mind. 2 pro Tone
   // ------------------------------------------------------------------------
