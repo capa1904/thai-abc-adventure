@@ -16,7 +16,7 @@ export const CharacterActions: React.FC<CharacterActionsProps> = ({
   character,
 }) => {
   return (
-    <div className="absolute top-2 right-2 flex gap-1">
+    <div className="flex gap-1">
       {onSelectForPractice && (
         <Button
           variant="ghost"
