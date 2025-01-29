@@ -1,7 +1,9 @@
+// \\?\C:\git\temp\thai-abc-adventure\src\components\GridView.tsx
 import React from "react";
 import { ViewProps, ThaiItem, ThaiWord, ThaiCharacter } from "@/types/thai";
 import CharacterCard from "./CharacterCard";
 import PracticeCard from "./PracticeCard";
+import { VowelCard } from "./VowelCard";
 
 const GridView: React.FC<ViewProps> = ({
   items,
@@ -13,6 +15,7 @@ const GridView: React.FC<ViewProps> = ({
   const renderCard = (item: ThaiItem, index: number) => {
     if (!item) return null;
 
+    // 1) Practice
     if (selectedCategory === "Practice") {
       const practiceItem = item as ThaiWord;
       return (
@@ -25,6 +28,26 @@ const GridView: React.FC<ViewProps> = ({
         />
       );
     }
+
+    // 2) Vowels
+    if (selectedCategory === "Vowels") {
+      const vowelItem = item as ThaiCharacter & { displayForm: string };
+      return (
+        <VowelCard
+          key={vowelItem.char + vowelItem.displayForm}
+          char={vowelItem.char}
+          displayForm={vowelItem.displayForm}
+          romanization={vowelItem.romanization}
+          meaning={vowelItem.meaning}
+          letterName={vowelItem.letterName}
+          hideRomanization={hideRomanization}
+          onSelectForPractice={onSelectForPractice}
+          onFocus={onFocusCard ? () => onFocusCard(index) : undefined}
+        />
+      );
+    }
+
+    // 3) Consonants / Tones
     const characterItem = item as ThaiCharacter;
     return (
       <CharacterCard

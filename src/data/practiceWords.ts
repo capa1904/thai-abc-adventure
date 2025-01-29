@@ -1,6 +1,21 @@
 import { ThaiWord } from "@/types/thai";
 
-export const PRACTICE_WORDS: ThaiWord[] = [
+/**
+ * Erweitertes Interface, damit wir bei Bedarf
+ * Vokale (und später evtl. Consonants) fest angeben können.
+ */
+export interface ExtendedThaiWord extends ThaiWord {
+  /**
+   * Liste aller Vokale in displayForm,
+   * die dieses Wort beinhalten soll.
+   */
+  associatedVowels?: string[];
+}
+
+export const PRACTICE_WORDS: ExtendedThaiWord[] = [
+  // ------------------------------------------------------------------------
+  // GLOBALE WÖRTER (ohne zugeordnete Vokale)
+  // ------------------------------------------------------------------------
   { id: "g1", word: "สวัสดี", phonetic: "sa-wat-dee", meaning: "hello" },
   { id: "g2", word: "ขอบคุณ", phonetic: "khop-khun", meaning: "thank you" },
   { id: "g3", word: "ลาก่อน", phonetic: "laa-gorn", meaning: "goodbye" },
@@ -21,6 +36,10 @@ export const PRACTICE_WORDS: ThaiWord[] = [
   { id: "g18", word: "ร้อน", phonetic: "ron", meaning: "hot" },
   { id: "g19", word: "เย็น", phonetic: "yen", meaning: "cold" },
   { id: "g20", word: "เล็ก", phonetic: "lek", meaning: "small" },
+
+  // ------------------------------------------------------------------------
+  // CONSONANTS (je 2 example words, keine associatedVowels hier)
+  // ------------------------------------------------------------------------
   // MIDDLE CLASS
   // ก
   { id: "k1", word: "กา", phonetic: "gaa", meaning: "crow" },
@@ -44,7 +63,13 @@ export const PRACTICE_WORDS: ThaiWord[] = [
 
   // ป
   { id: "k11", word: "ปลา", phonetic: "plaa", meaning: "fish" },
-  { id: "k12", word: "เป็น", phonetic: "bpen", meaning: "to be" },
+  {
+    id: "k12",
+    word: "เป็น",
+    phonetic: "bpen",
+    meaning: "to be",
+    associatedVowels: ["เ-ะ"], // short e
+  },
 
   // อ
   { id: "k13", word: "ออก", phonetic: "awk", meaning: "to exit" },
@@ -52,7 +77,13 @@ export const PRACTICE_WORDS: ThaiWord[] = [
 
   // HIGH CLASS
   // ข
-  { id: "k15", word: "ขอ", phonetic: "kaw", meaning: "to ask for" },
+  {
+    id: "k15",
+    word: "ขอ",
+    phonetic: "kaw",
+    meaning: "to ask (for)",
+    associatedVowels: ["-อ"], // long aw/or
+  },
   { id: "k16", word: "ข้าว", phonetic: "kaao", meaning: "rice" },
 
   // ฉ
@@ -126,75 +157,283 @@ export const PRACTICE_WORDS: ThaiWord[] = [
   { id: "k48", word: "วัน", phonetic: "wan", meaning: "day" },
 
   // ------------------------------------------------------------------------
-  // 3) VOWELS: mind. 2 pro Vokal
+  // VOWELS: mind. 2 pro Vokal
+  // (Basierend auf unseren displayForms in `vowels.ts`)
   // ------------------------------------------------------------------------
-  // ะ
-  { id: "k49", word: "จะ", phonetic: "ja", meaning: "will" },
-  { id: "k50", word: "นะ", phonetic: "na", meaning: "particle" },
 
-  // า
-  { id: "k51", word: "ขา", phonetic: "khaa", meaning: "leg" },
-  { id: "k52", word: "หา", phonetic: "haa", meaning: "to search" },
+  // 1) -ะ (short a)
+  {
+    id: "k49",
+    word: "จะ",
+    phonetic: "ja",
+    meaning: "will",
+    associatedVowels: ["-ะ"],
+  },
+  {
+    id: "k50",
+    word: "นะ",
+    phonetic: "na",
+    meaning: "particle",
+    associatedVowels: ["-ะ"],
+  },
 
-  // ิ
-  { id: "k53", word: "กิน", phonetic: "gin", meaning: "to eat" },
-  { id: "k54", word: "นิด", phonetic: "nit", meaning: "a bit" },
+  // 2) -า (long a)
+  {
+    id: "k51",
+    word: "ขา",
+    phonetic: "khaa",
+    meaning: "leg",
+    associatedVowels: ["-า"],
+  },
+  {
+    id: "k52",
+    word: "หา",
+    phonetic: "haa",
+    meaning: "to search",
+    associatedVowels: ["-า"],
+  },
 
-  // ี
-  // => Wir nehmen z. B. "พี่" (phii = older sibling) + "ขี่" (khi) = "to ride"
-  { id: "k55", word: "พี่", phonetic: "phii", meaning: "older sibling" },
-  { id: "k56", word: "ขี่", phonetic: "khi", meaning: "to ride" },
+  // 3) -ิ (short i)
+  {
+    id: "k53",
+    word: "กิน",
+    phonetic: "gin",
+    meaning: "to eat",
+    associatedVowels: ["-ิ"],
+  },
+  {
+    id: "k54",
+    word: "นิด",
+    phonetic: "nit",
+    meaning: "a bit",
+    associatedVowels: ["-ิ"],
+  },
 
-  // ึ
-  { id: "k57", word: "นึก", phonetic: "nʉk", meaning: "to think" },
-  { id: "k58", word: "ลึก", phonetic: "lʉk", meaning: "deep" },
+  // 4) -ี (long i)
+  {
+    id: "k55",
+    word: "พี่",
+    phonetic: "phii",
+    meaning: "older sibling",
+    associatedVowels: ["-ี"],
+  },
+  {
+    id: "k56",
+    word: "ขี่",
+    phonetic: "khi",
+    meaning: "to ride",
+    associatedVowels: ["-ี"],
+  },
 
-  // ื
-  { id: "k59", word: "ถือ", phonetic: "thʉʉ", meaning: "to hold" },
-  { id: "k60", word: "ยืม", phonetic: "yʉʉm", meaning: "to borrow" },
+  // 5) -ึ (short ue)
+  {
+    id: "k57",
+    word: "นึก",
+    phonetic: "nʉk",
+    meaning: "to think",
+    associatedVowels: ["-ึ"],
+  },
+  {
+    id: "k58",
+    word: "ลึก",
+    phonetic: "lʉk",
+    meaning: "deep",
+    associatedVowels: ["-ึ"],
+  },
 
-  // เ
-  { id: "k61", word: "เด็ก", phonetic: "dek", meaning: "child" },
-  { id: "k62", word: "เตะ", phonetic: "te", meaning: "to kick" },
+  // 6) -ื (long ue)
+  {
+    id: "k59",
+    word: "ถือ",
+    phonetic: "thʉʉ",
+    meaning: "to hold",
+    associatedVowels: ["-ื"],
+  },
+  {
+    id: "k60",
+    word: "ยืม",
+    phonetic: "yʉʉm",
+    meaning: "to borrow",
+    associatedVowels: ["-ื"],
+  },
 
-  // แ
-  { id: "k63", word: "แมว", phonetic: "maew", meaning: "cat" },
-  { id: "k64", word: "แสง", phonetic: "saeng", meaning: "light" },
+  // 7) -ุ (short u)
+  {
+    id: "k69",
+    word: "ตุ๊ก",
+    phonetic: "tuk",
+    meaning: "doll",
+    associatedVowels: ["-ุ"],
+  },
+  {
+    id: "k70",
+    word: "ลุง",
+    phonetic: "lung",
+    meaning: "uncle",
+    associatedVowels: ["-ุ"],
+  },
 
-  // โ
-  { id: "k65", word: "โต๊ะ", phonetic: "to", meaning: "table" },
-  { id: "k66", word: "โกรธ", phonetic: "grot", meaning: "angry" },
+  // 8) -ู (long u)
+  {
+    id: "k71",
+    word: "ดู",
+    phonetic: "duu",
+    meaning: "to watch",
+    associatedVowels: ["-ู"],
+  },
+  {
+    id: "k72",
+    word: "รู้",
+    phonetic: "ruu",
+    meaning: "to know",
+    associatedVowels: ["-ู"],
+  },
 
-  // อ
-  { id: "k67", word: "ออ", phonetic: "oo", meaning: "to exit" },
-  { id: "k68", word: "ออม", phonetic: "oom", meaning: "to save" },
+  // 9) เ-ะ (short e)
+  {
+    id: "k61",
+    word: "เด็ก",
+    phonetic: "dek",
+    meaning: "child",
+    associatedVowels: ["เ-ะ"],
+  },
+  {
+    id: "k62",
+    word: "เตะ",
+    phonetic: "te",
+    meaning: "to kick",
+    associatedVowels: ["เ-ะ"],
+  },
 
-  // ุ
-  { id: "k69", word: "ตุ๊ก", phonetic: "tuk", meaning: "doll" },
-  { id: "k70", word: "ลุง", phonetic: "lung", meaning: "uncle" },
+  // 10) เ- (long e)
+  // Keine vorhandenen Wörter -> wir erstellen 2 einfache:
+  {
+    id: "k200",
+    word: "เท",
+    phonetic: "teh",
+    meaning: "to pour",
+    associatedVowels: ["เ-"],
+  },
+  {
+    id: "k201",
+    word: "เพลง",
+    phonetic: "phleng",
+    meaning: "Lied",
+    associatedVowels: ["เ-"],
+  },
 
-  // ู
-  { id: "k71", word: "ดู", phonetic: "duu", meaning: "to watch" },
-  { id: "k72", word: "รู้", phonetic: "ruu", meaning: "to know" },
+  // 11) แ-ะ (short ae)
+  {
+    id: "k63",
+    word: "แมว",
+    phonetic: "maew",
+    meaning: "cat",
+    associatedVowels: ["แ-ะ"],
+  },
+  {
+    id: "k203",
+    word: "แกะ",
+    phonetic: "gae",
+    meaning: "sheep",
+    associatedVowels: ["แ-ะ"],
+  },
+
+  // 12) แ- (long ae)
+  // "k64" ("แสง") ist "saeng" => long ae -> fügen wir es hinzu:
+  {
+    id: "k64",
+    word: "แสง",
+    phonetic: "saeng",
+    meaning: "light",
+    associatedVowels: ["แ-"],
+  },
+  {
+    id: "k204",
+    word: "แพง",
+    phonetic: "phaeng",
+    meaning: "expensive",
+    associatedVowels: ["แ-"],
+  },
+
+  // 13) โ-ะ (short o)
+  {
+    id: "k65",
+    word: "โต๊ะ",
+    phonetic: "to",
+    meaning: "table",
+    associatedVowels: ["โ-ะ"],
+  },
+  {
+    id: "k208",
+    word: "โป๊ะ",
+    phonetic: "po",
+    meaning: "raft/pier",
+    associatedVowels: ["โ-ะ"],
+  },
+
+  // 14) โ- (long o)
+  // "k66" (โกรธ) => "grot"? Kann man als lang o einstufen
+  {
+    id: "k66",
+    word: "โกรธ",
+    phonetic: "groht",
+    meaning: "angry",
+    associatedVowels: ["โ-"],
+  },
+  {
+    id: "k209",
+    word: "โทร",
+    phonetic: "thoh",
+    meaning: "anrufen",
+    associatedVowels: ["โ-"],
+  },
+
+  // 15) เอาะ (short aw)
+  // Keine existierenden -> wir fügen 2 an:
+  {
+    id: "k210",
+    word: "เกาะ",
+    phonetic: "gaw",
+    meaning: "Insel",
+    associatedVowels: ["เอาะ"],
+  },
+  {
+    id: "k211",
+    word: "เคราะห์",
+    phonetic: "khraw",
+    meaning: "Schicksal",
+    associatedVowels: ["เอาะ"],
+  },
+
+  // 16) -อ (long aw/or)
+  // k15: "ขอ" haben wir schon. Wir brauchen 2. Machen wir "พอ" (enough)
+  {
+    id: "k212",
+    word: "พอ",
+    phonetic: "phaw",
+    meaning: "enough",
+    associatedVowels: ["-อ"],
+  },
 
   // ------------------------------------------------------------------------
   // 4) TONES: mind. 2 pro Tone
   // ------------------------------------------------------------------------
   // ่ (mai ek)
-  { id: "k61", word: "น่า", phonetic: "naa", meaning: "seems/looks" },
-  { id: "k62", word: "เก่า", phonetic: "gao", meaning: "old" },
+  { id: "tone1", word: "น่า", phonetic: "naa", meaning: "seems/looks" },
+  { id: "tone2", word: "เก่า", phonetic: "gao", meaning: "old" },
 
   // ้ (mai tho)
-  { id: "k63", word: "น้อย", phonetic: "nói", meaning: "little" },
-  { id: "k64", word: "ได้", phonetic: "dai", meaning: "can/okay" },
+  { id: "tone3", word: "น้อย", phonetic: "nói", meaning: "little" },
+  { id: "tone4", word: "ได้", phonetic: "dai", meaning: "can/okay" },
 
   // ๊ (mai trii)
-  { id: "k65", word: "ยี้", phonetic: "yîi", meaning: "ew (disgust)" },
-  { id: "k66", word: "ป๊อป", phonetic: "bpóp", meaning: "pop" },
+  { id: "tone5", word: "ยี้", phonetic: "yîi", meaning: "ew (disgust)" },
+  { id: "tone6", word: "ป๊อป", phonetic: "bpóp", meaning: "pop" },
 
   // ๋ (mai chattawa)
-  { id: "k67", word: "จ๋า", phonetic: "jaa", meaning: "soft exclamation" },
-  { id: "k68", word: "ป๋า", phonetic: "bpǎ", meaning: "dad (colloquial)" },
+  { id: "tone7", word: "จ๋า", phonetic: "jaa", meaning: "soft exclamation" },
+  { id: "tone8", word: "ป๋า", phonetic: "bpǎ", meaning: "dad (colloquial)" },
+
   // Rare consonant practice words
   {
     id: "rare1",

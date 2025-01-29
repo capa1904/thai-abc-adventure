@@ -1,5 +1,9 @@
 import { ThaiCharacter, ThaiWord } from "@/types/thai";
-import { MIDDLE_CLASS_CONSONANTS, HIGH_CLASS_CONSONANTS, LOW_CLASS_CONSONANTS } from "./consonants";
+import {
+  MIDDLE_CLASS_CONSONANTS,
+  HIGH_CLASS_CONSONANTS,
+  LOW_CLASS_CONSONANTS,
+} from "./consonants";
 import { VOWELS } from "./vowels";
 import { TONES } from "./tones";
 import { PRACTICE_WORDS } from "./practiceWords";
@@ -13,7 +17,11 @@ export const THAI_CONSONANTS = {
 };
 
 export const THAI_CHARACTERS: Record<string, ThaiCharacter[] | ThaiWord[]> = {
-  Consonants: [...MIDDLE_CLASS_CONSONANTS, ...HIGH_CLASS_CONSONANTS, ...LOW_CLASS_CONSONANTS],
+  Consonants: [
+    ...MIDDLE_CLASS_CONSONANTS,
+    ...HIGH_CLASS_CONSONANTS,
+    ...LOW_CLASS_CONSONANTS,
+  ],
   Vowels: VOWELS,
   Tones: TONES,
   Practice: PRACTICE_WORDS,

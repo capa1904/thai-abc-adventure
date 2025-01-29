@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import React, { useEffect } from "react";
 import GridView from "@/components/GridView";
 import SingleCardView from "@/components/SingleCardView";
@@ -118,7 +119,8 @@ const Index: React.FC = () => {
         onToggleViewMode={(value) => setIsSingleCardMode(value === "single")}
         onBackClick={handleBackClick}
         showBackButton={
-          (selectedCategory === "Practice" && previousCategory) || isSingleCardMode
+          (selectedCategory === "Practice" && previousCategory != null) ||
+          isSingleCardMode
         }
       />
       <CategoryNav

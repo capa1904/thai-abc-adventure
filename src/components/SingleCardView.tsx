@@ -1,11 +1,19 @@
+// \\?\C:\git\temp\thai-abc-adventure\src\components\SingleCardView.tsx
+
 import React from "react";
-import { ViewProps, ThaiItem, ThaiWord, ThaiCharacter } from "@/types/thai";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+
+import { ViewProps, ThaiItem, ThaiWord, ThaiCharacter } from "@/types/thai";
 import CharacterCard from "./CharacterCard";
 import PracticeCard from "./PracticeCard";
+import { VowelCard } from "./VowelCard";
 
+/**
+ * SingleCardView: Zeigt immer nur ein Element an (Index 'currentIndex'),
+ * mit Buttons für "Prev" / "Next".
+ */
 const SingleCardView: React.FC<ViewProps> = ({
   items,
   selectedCategory,
@@ -14,11 +22,15 @@ const SingleCardView: React.FC<ViewProps> = ({
   hideRomanization,
   onSelectForPractice,
 }) => {
+  // Das derzeit selektierte Element
   const currentItem = items[currentIndex];
-
   if (!currentItem) return null;
 
+  /**
+   * Rendert die passende Card-Komponente abhängig von 'selectedCategory'.
+   */
   const renderCard = (item: ThaiItem) => {
+    // 1) Practice-Wörter
     if (selectedCategory === "Practice") {
       const practiceItem = item as ThaiWord;
       return (
@@ -30,6 +42,29 @@ const SingleCardView: React.FC<ViewProps> = ({
         />
       );
     }
+
+    // 2) Vowels
+    if (selectedCategory === "Vowels") {
+      // Hier hat das Item zusätzlich displayForm
+      const vowelItem = item as ThaiCharacter & { displayForm: string };
+      return (
+        <VowelCard
+          char={vowelItem.char}
+          displayForm={vowelItem.displayForm}
+          romanization={vowelItem.romanization}
+          meaning={vowelItem.meaning}
+          letterName={vowelItem.letterName}
+          hideRomanization={hideRomanization}
+          // Actions: onSelectForPractice, etc.
+          onSelectForPractice={onSelectForPractice}
+          // In der Single-Card-Ansicht ist "Focus" nicht immer relevant,
+          // aber falls du es möchtest, kannst du hier etwas wie
+          // onFocus={() => console.log("Focus clicked")} übergeben.
+        />
+      );
+    }
+
+    // 3) Consonants oder Tones -> CharacterCard
     const characterItem = item as ThaiCharacter;
     return (
       <CharacterCard
@@ -40,12 +75,15 @@ const SingleCardView: React.FC<ViewProps> = ({
         class={characterItem.class}
         hideRomanization={hideRomanization}
         onSelectForPractice={onSelectForPractice}
+        isRare={characterItem.isRare}
+        rareInfo={characterItem.rareInfo}
       />
     );
   };
 
   return (
     <div className="flex flex-col items-center">
+      {/* Card-Container (Framer Motion für Slide-Effekte) */}
       <div className="w-full max-w-lg mx-auto">
         <AnimatePresence initial={false} mode="wait">
           <motion.div
@@ -64,6 +102,7 @@ const SingleCardView: React.FC<ViewProps> = ({
         </AnimatePresence>
       </div>
 
+      {/* Navigations-Leiste (Prev / Next) */}
       <div className="flex items-center gap-4 mt-4">
         <Button
           variant="outline"
@@ -72,9 +111,11 @@ const SingleCardView: React.FC<ViewProps> = ({
         >
           <ChevronLeft className="h-4 w-4" /> Previous
         </Button>
+
         <p className="text-sm text-gray-500 min-w-[100px] text-center">
           Card {currentIndex + 1} of {items.length}
         </p>
+
         <Button
           variant="outline"
           onClick={() => onNavigate?.("next")}
