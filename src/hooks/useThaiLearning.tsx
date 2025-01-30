@@ -1,8 +1,12 @@
 // \\?\C:\git\temp\thai-abc-adventure\src\hooks\useThaiLearning.tsx
 
 import { useState, useCallback } from "react";
-import { CATEGORIES, THAI_CHARACTERS } from "@/data/thaiCharacters";
-import { PRACTICE_WORDS, ExtendedThaiWord } from "@/data/practiceWords";
+import {
+  CATEGORIES,
+  THAI_CHARACTERS,
+  THAI_CONSONANTS, // <-- Wichtig: importieren
+} from "@/data/thaiCharacters";
+import { ExtendedThaiWord } from "@/data/practiceWords";
 import { ThaiItem, ThaiWord, ThaiCharacter } from "@/types/thai";
 
 export const useThaiLearning = () => {
@@ -52,8 +56,8 @@ export const useThaiLearning = () => {
         return practiceItems;
       }
 
+      // Falls Vokal => Filtern via associatedVowels
       if (isVowelChar(selectedCharacter)) {
-        // Filtern via associatedVowels
         return practiceItems.filter((word) => {
           if (!word.associatedVowels) return false;
           return word.associatedVowels.includes(selectedCharacter);
@@ -74,27 +78,22 @@ export const useThaiLearning = () => {
 
     // 2) CONSONANTS
     if (selectedCategory === "Consonants") {
+      // Falls "Middle Class", "High Class", "Low Class" gewählt:
       if (
         selectedClass &&
         ["Middle Class", "High Class", "Low Class"].includes(selectedClass)
       ) {
-        const cArray = THAI_CHARACTERS[selectedClass];
+        const cArray = THAI_CONSONANTS[selectedClass]; // <-- WICHTIG
+        // cArray existiert jetzt, also kein undefined.map mehr
         return cArray.map((c) => ({
           ...c,
           class: selectedClass as "Middle Class" | "High Class" | "Low Class",
         }));
       } else {
-        // Alle Konsonanten
-        return Object.entries(THAI_CHARACTERS)
-          .filter(
-            ([key]) => key !== "Practice" && key !== "Vowels" && key !== "Tones"
-          )
-          .flatMap(([cls, chars]) =>
-            chars.map((c) => ({
-              ...c,
-              class: cls as "Middle Class" | "High Class" | "Low Class",
-            }))
-          );
+        // "All Classes": Alle Consonants zusammenfassen
+        return Object.values(THAI_CONSONANTS)
+          .flat()
+          .map((c) => ({ ...c })); // optional, wenn du class=... willst, füg es manuell hinzu
       }
     }
 
